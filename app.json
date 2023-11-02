@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "chatapp",
+    "slug": "chatapp",
+    "orientation": "portrait",
+    "icon": "./assets/appLogo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/appLogo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fbc38cbf-12b5-4fb6-bc5f-481900e84d07"
+      }
+    }
+  }
+}
