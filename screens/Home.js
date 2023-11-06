@@ -19,14 +19,20 @@ import Icon from "@expo/vector-icons/MaterialCommunityIcons";
 import React, { useContext, useEffect, useState } from "react";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { query, where, collection, onSnapshot } from "firebase/firestore";
+import {
+  query,
+  where,
+  collection,
+  onSnapshot,
+  orderBy,
+} from "firebase/firestore";
 
-const ChatScreen = ({ navigation }) => {
+const Home = ({ navigation }) => {
   const { uid, setUid } = useContext(UserContext);
+  const [posts, setPosts] = useState([]);
 
-  const [users, setUsers] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState([]);
+  const uri =
+    "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   const handleLogout = () => {
     AsyncStorage.removeItem("uid");
@@ -34,35 +40,43 @@ const ChatScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    getActiveChats();
+    getPosts();
   }, []);
 
-  const getActiveChats = () => {
+  const getPosts = () => {
     const q = query(
-      collection(database, "users"),
-      where(`${uid}user`, "==", true)
+      collection(database, "posts"),
+      orderBy("createdAt", "desc") // Order by the latest posts
     );
     const unsubscribe = onSnapshot(q, (snap) => {
-      const arry = snap.docs.map((doc) => ({ ...doc.data(), uid: doc.id }));
-      setFilteredUsers(arry);
-      setUsers(arry);
+      const postsArray = snap.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+        creatorName: doc.data().creatorName, // Add this line
+      }));
+      setPosts(postsArray);
     });
     return unsubscribe;
   };
 
-  const handleSearch = (txt) => {
-    setSearchQuery(txt);
-    let filterList = users.filter((obj) => {
-      return obj?.name?.toLowerCase()?.includes(txt?.toLowerCase());
-    });
-    setFilteredUsers(filterList);
-  };
+  function getRelativeTime(createdAt) {
+    const now = moment();
+    const postTime = moment(createdAt);
+    const diff = now.diff(postTime, "minutes");
+
+    if (diff < 60) return `${diff} min ago`;
+    if (diff < 60 * 24) return `${Math.floor(diff / 60)} hr ago`;
+    if (diff < 60 * 24 * 30) return `${Math.floor(diff / (60 * 24))} d ago`;
+    if (diff < 60 * 24 * 30 * 12)
+      return `${Math.floor(diff / (60 * 24 * 30))} mo ago`;
+    return `${Math.floor(diff / (60 * 24 * 30 * 12))} yr ago`;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Image source={logo} style={styles.logo} />
-        <Text style={{ fontSize: 20, fontWeight: 600 }}>Chat Room</Text>
+        <Text style={{ fontSize: 20, fontWeight: 600 }}>Home</Text>
         <TouchableOpacity
           style={styles.but}
           activeOpacity={0.8}
@@ -71,91 +85,60 @@ const ChatScreen = ({ navigation }) => {
           <MaterialIcons name={"logout"} size={18} color="white" />
         </TouchableOpacity>
       </View>
-      <View style={styles.searchContainer}>
-        <TextInput
-          value={searchQuery}
-          style={styles.searchInput}
-          onChangeText={handleSearch}
-          placeholder="Search users..."
-        />
-        <Icon name="magnify" style={[styles.searchIcon]} />
-      </View>
-      <ScrollView
-        refreshControl={<RefreshControl onRefresh={getActiveChats} />}
-      >
-        {filteredUsers?.map((user, idx) => {
-          let txt = "";
-          const curDate = moment();
-          const tim = moment(user[uid].msgTime);
-          if (tim.isSame(curDate, "day")) {
-            txt = tim.format("hh:mm A");
-          } else if (tim.isSame(curDate.subtract(1, "days"), "day")) {
-            txt = "Yesterday";
-          } else txt = tim.format("DD/MM/YYYY");
-
-          return (
-            <View style={styles.row} key={idx}>
-              <TouchableOpacity
-                style={styles.leftBox}
-                onPress={() => {
-                  navigation.navigate("SelectedChatScreen", { user, uid });
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={styles.imgBox}>
-                    <OptimizedImage
-                      contentFit="cover"
-                      style={styles.image}
-                      source={{
-                        uri: "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png",
-                      }}
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.brand}>{user.name}</Text>
-                    <Text style={styles.package} numberOfLines={2}>
-                      {user.email}
-                    </Text>
-                  </View>
-                </View>
-                <View style={{ alignItems: "flex-end" }}>
-                  <Text style={styles.read}>{txt}</Text>
-                  <View style={{ alignItems: "center" }}>
-                    {user[uid]?.unread && (
-                      <View
-                        style={{
-                          width: 10,
-                          height: 10,
-                          marginVertical: 5,
-                          borderRadius: 35,
-                          backgroundColor: "green",
-                        }}
-                      />
-                    )}
-                    <FontAwesome
-                      size={15}
-                      color="gray"
-                      name={user[uid].unread ? "envelope-o" : "envelope-open-o"}
-                    />
-                  </View>
-                </View>
-              </TouchableOpacity>
+      <ScrollView refreshControl={<RefreshControl onRefresh={getPosts} />}>
+        {posts.map((post, idx) => (
+          <View style={styles.post} key={idx}>
+            {console.log(post)}
+            <View activeOpacity={0.9} style={styles.content}>
+              <View style={{ flexDirection: "row" }}>
+                <Image style={styles.previewImg} source={{ uri }} />
+                <Text style={styles.name}>
+                  {post?.creatorName || "Loading..."}
+                </Text>
+              </View>
+              <View>
+                <Text style={styles.postTime}>
+                  {post.createdAt
+                    ? getRelativeTime(post.createdAt.toDate())
+                    : "Loading..."}
+                </Text>
+              </View>
+              <View style={{ marginTop: 20, marginLeft: 10 }}>
+                <Text style={{ fontSize: 22 }}>{post.title}</Text>
+                {/* You can also display the post image if available */}
+                {post.imageUrl && (
+                  <Image
+                    source={{ uri: post.imageUrl }}
+                    style={styles.postImage}
+                  />
+                )}
+              </View>
             </View>
-          );
-        })}
+          </View>
+        ))}
       </ScrollView>
+      <View style={styles.addButtonContainer}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            navigation.navigate("AddPostScreen");
+          }}
+        >
+          <FontAwesome name="plus" size={20} color="white" />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
 
-export default ChatScreen;
+export default Home;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "lightgray",
   },
   but: {
     width: 35,
@@ -176,12 +159,12 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
   },
-  row: {
-    width: "90%",
-    marginHorizontal: "5%",
-    paddingVertical: 15,
-    borderBottomColor: "gainsboro",
-    borderBottomWidth: 1,
+  post: {
+    marginVertical: 10,
+    padding: 5,
+    paddingVertical: 10,
+    width: "100%",
+    backgroundColor: "#fff",
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -224,7 +207,6 @@ const styles = StyleSheet.create({
     color: "gray",
     marginBottom: 5,
   },
-
   searchContainer: {
     width: "92%",
     alignSelf: "center",
@@ -253,5 +235,45 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#858C94",
     position: "absolute",
+  },
+  addButtonContainer: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    zIndex: 1,
+  },
+  addButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#009c55",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewImg: {
+    width: 50,
+    height: 50,
+    borderRadius: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "gainsboro",
+  },
+  content: {
+    width: "100%",
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    flexDirection: "colun",
+    // alignItems: "center",
+  },
+  name: {
+    fontSize: 18,
+    marginLeft: 10,
+    fontWeight: "600",
+  },
+  postTime: {
+    fontSize: 18,
+    marginLeft: 60,
+    marginTop: -20,
+    color: "gray",
   },
 });

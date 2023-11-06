@@ -6,6 +6,7 @@ import Login from "./screens/LoginScreen";
 import SeachScreen from "./screens/Search";
 import ForgetPsw from "./screens/ForgetPsw";
 import MessageSceen from "./screens/MessageSceen";
+import AddPostScreen from "./screens/AddPostScreen";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import { NavigationContainer } from "@react-navigation/native";
@@ -90,6 +91,7 @@ export const DrawerStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="TabStack" component={TabStack} />
       <Stack.Screen name="SelectedChatScreen" component={MessageSceen} />
+      <Stack.Screen name="AddPostScreen" component={AddPostScreen} />
     </Stack.Navigator>
   );
 };
