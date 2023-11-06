@@ -10,13 +10,6 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from "react-native";
-import {
-  query,
-  where,
-  getDocs,
-  collection,
-  onSnapshot,
-} from "firebase/firestore";
 import moment from "moment";
 import { database } from "../firebase";
 import logo from "../assets/appLogo.png";
@@ -26,12 +19,12 @@ import Icon from "@expo/vector-icons/MaterialCommunityIcons";
 import React, { useContext, useEffect, useState } from "react";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { query, where, collection, onSnapshot } from "firebase/firestore";
 
 const ChatScreen = ({ navigation }) => {
   const { uid, setUid } = useContext(UserContext);
 
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
 
@@ -41,6 +34,10 @@ const ChatScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
+    getActiveChats();
+  }, []);
+
+  const getActiveChats = () => {
     const q = query(
       collection(database, "users"),
       where(`${uid}user`, "==", true)
@@ -51,21 +48,6 @@ const ChatScreen = ({ navigation }) => {
       setUsers(arry);
     });
     return unsubscribe;
-  }, []);
-
-  const getChatUsers = async (uid) => {
-    try {
-      setLoading(true);
-      const q = await getDocs(
-        query(collection(database, "users"), where([`${uid}user`], "==", true))
-      );
-      setLoading(false);
-      const arry = q.docs.map((doc) => ({ ...doc.data(), uid: doc.id }));
-      setFilteredUsers(arry);
-      setUsers(arry);
-    } catch (error) {
-      setLoading(false);
-    }
   };
 
   const handleSearch = (txt) => {
@@ -99,12 +81,7 @@ const ChatScreen = ({ navigation }) => {
         <Icon name="magnify" style={[styles.searchIcon]} />
       </View>
       <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={loading}
-            onRefresh={() => getChatUsers(uid)}
-          />
-        }
+        refreshControl={<RefreshControl onRefresh={getActiveChats} />}
       >
         {filteredUsers?.map((user, idx) => {
           let txt = "";

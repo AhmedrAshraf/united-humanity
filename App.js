@@ -1,5 +1,5 @@
 import Home from "./screens/Home";
-import Users from "./screens/Users";
+import Users from "./screens/Chat";
 import Signup from "./screens/Signup";
 import Profile from "./screens/Profile";
 import Login from "./screens/LoginScreen";
@@ -41,9 +41,18 @@ const Tab = createBottomTabNavigator();
 export const TabStack = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Chat"
+      initialRouteName="Home"
       screenOptions={{ headerShown: false, tabBarShowLabel: false }}
     >
+      <Tab.Screen
+        name="Home"
+        component={Home}
+        options={{
+          tabBarIcon: () => (
+            <MaterialIcons size={25} name="home" color="#009c55" />
+          ),
+        }}
+      />
       <Tab.Screen
         name="Chat"
         component={Users}
@@ -60,15 +69,6 @@ export const TabStack = () => {
         options={{
           tabBarIcon: () => (
             <MaterialIcons size={25} name="search" color="#009c55" />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Home"
-        component={Home}
-        options={{
-          tabBarIcon: () => (
-            <MaterialIcons size={25} name="home" color="#009c55" />
           ),
         }}
       />
