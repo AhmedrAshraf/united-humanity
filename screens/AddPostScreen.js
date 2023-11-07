@@ -136,6 +136,7 @@ export default AddPostScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f1f2f5",
   },
   header: {
     width: "95%",
