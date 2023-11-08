@@ -12,7 +12,7 @@ import { database } from "../firebase";
 import logo from "../assets/appLogo.png";
 import { Button } from "react-native-paper";
 import { doc, getDoc } from "firebase/firestore";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { UserContext } from "../utils/UserContext";
 import React, { useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -42,7 +42,11 @@ const SettingScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Image source={logo} style={styles.logo} />
+        <Feather
+          name="arrow-left"
+          style={styles.arrow}
+          onPress={() => navigation.goBack()}
+        />
         <Text style={{ fontSize: 20, fontWeight: "600" }}>Setting</Text>
         <TouchableOpacity
           activeOpacity={0.8}
@@ -111,7 +115,9 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   header: {
-    width: "95%",
+    width: "100%",
+    marginBottom: 20,
+    paddingHorizontal: 15,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -132,7 +138,7 @@ const styles = StyleSheet.create({
   },
   arrow: {
     fontSize: 30,
-    color: "#2AD7EB",
+    color: "#009c55",
   },
   SettingContainer: {
     width: "100%",
@@ -217,14 +223,13 @@ const styles = StyleSheet.create({
   logoutBut: {
     width: 35,
     height: 35,
-    marginRight: 10,
     borderRadius: 50,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#009c55",
   },
   but: {
-    bottom: 10,
+    bottom: 50,
     width: "90%",
     marginTop: 10,
     borderRadius: 10,

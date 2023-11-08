@@ -2,6 +2,7 @@ import Home from "./screens/Home";
 import Users from "./screens/Chat";
 import Signup from "./screens/Signup";
 import Setting from "./screens/Setting";
+import Profile from "./screens/Profile";
 import Login from "./screens/LoginScreen";
 import SeachScreen from "./screens/Search";
 import ForgetPsw from "./screens/ForgetPsw";
@@ -74,11 +75,11 @@ export const TabStack = () => {
         }}
       />
       <Tab.Screen
-        name="Setting"
-        component={Setting}
+        name="Profile"
+        component={Profile}
         options={{
           tabBarIcon: () => (
-            <MaterialIcons size={25} name="settings" color="#009c55" />
+            <MaterialIcons size={25} name="person" color="#009c55" />
           ),
         }}
       />
@@ -92,6 +93,7 @@ export const DrawerStack = () => {
       <Stack.Screen name="TabStack" component={TabStack} />
       <Stack.Screen name="SelectedChatScreen" component={MessageSceen} />
       <Stack.Screen name="AddPostScreen" component={AddPostScreen} />
+      <Stack.Screen name="Setting" component={Setting} />
     </Stack.Navigator>
   );
 };
