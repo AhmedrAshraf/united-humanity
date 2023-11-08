@@ -17,7 +17,7 @@ import { UserContext } from "../utils/UserContext";
 import React, { useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const ProfileScreen = () => {
+const SettingScreen = () => {
   const [user, setUser] = useState();
   const { uid, setUid } = useContext(UserContext);
 
@@ -43,7 +43,7 @@ const ProfileScreen = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Image source={logo} style={styles.logo} />
-        <Text style={{ fontWeight: "700" }}>Profile</Text>
+        <Text style={{ fontSize: 20, fontWeight: "600" }}>Setting</Text>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleLogout}
@@ -53,16 +53,16 @@ const ProfileScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.ProfileContainer}>
+      <View style={styles.SettingContainer}>
         <View activeOpacity={0.9} style={styles.content}>
           <Image style={styles.previewImg} source={{ uri }} />
         </View>
-        <View style={styles.profileDetail}>
+        <View style={styles.SettingDetail}>
           <Text style={styles.name}>{user?.name || "Loading..."}</Text>
           <Text style={styles.email}>{user?.email || "Loading..."}</Text>
         </View>
       </View>
-      <View style={styles.ProfileData}>
+      <View style={styles.SettingData}>
         <View style={styles.inputBox}>
           <Text style={styles.label}>
             Full Name
@@ -103,7 +103,7 @@ const ProfileScreen = () => {
   );
 };
 
-export default ProfileScreen;
+export default SettingScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     color: "#2AD7EB",
   },
-  ProfileContainer: {
+  SettingContainer: {
     width: "100%",
     paddingBottom: 20,
     borderBottomWidth: 1,
@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#62E1EF",
   },
-  profileDetail: {
+  SettingDetail: {
     width: "100%",
     alignItems: "center",
     position: "relative",
   },
-  ProfileData: {
+  SettingData: {
     paddingTop: 20,
   },
   input: {

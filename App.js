@@ -1,7 +1,7 @@
 import Home from "./screens/Home";
 import Users from "./screens/Chat";
 import Signup from "./screens/Signup";
-import Profile from "./screens/Profile";
+import Setting from "./screens/Setting";
 import Login from "./screens/LoginScreen";
 import SeachScreen from "./screens/Search";
 import ForgetPsw from "./screens/ForgetPsw";
@@ -74,8 +74,8 @@ export const TabStack = () => {
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={Profile}
+        name="Setting"
+        component={Setting}
         options={{
           tabBarIcon: () => (
             <MaterialIcons size={25} name="settings" color="#009c55" />

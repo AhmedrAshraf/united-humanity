@@ -142,7 +142,7 @@ const Chat = ({ route, navigation }) => {
         />
         <TouchableOpacity
           style={styles.headerRow}
-          onPress={() => navigation.navigate("ProfileScreen", user)}
+          onPress={() => navigation.navigate("Setting", user)}
         >
           <Image
             source={{ uri: image }}
