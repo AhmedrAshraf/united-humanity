@@ -81,7 +81,11 @@ const Home = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Image style={styles.profilePic} source={{ uri }} />
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate("Profile", user)}>
+          <Image style={styles.profilePic} source={{ uri }} />
+        </TouchableOpacity>
         <Text style={{ fontSize: 20, fontWeight: 600 }}>Home</Text>
         <TouchableOpacity
           style={styles.but}
@@ -96,7 +100,10 @@ const Home = ({ navigation }) => {
           <View style={styles.post} key={idx}>
             <View activeOpacity={0.9} style={styles.content}>
               <View style={{ flexDirection: "row", paddingHorizontal: 10 }}>
-                <Image style={styles.previewImg} source={{ uri: post.creatorPic || cpi }} />
+                <Image
+                  style={styles.previewImg}
+                  source={{ uri: post.creatorPic || cpi }}
+                />
                 <Text style={styles.name}>
                   {post?.username || post?.creatorName || "Loading..."}
                 </Text>
@@ -117,8 +124,10 @@ const Home = ({ navigation }) => {
                 )}
               </View>
               <View style={{ marginTop: 20, flexDirection: "row" }}>
-                <Text style={{ fontSize: 18, fontWeight: 600 }}>{post.username || post.creatorName} </Text>
-                <Text style={{ fontSize: 18}}>{post.title}</Text>
+                <Text style={{ fontSize: 18, fontWeight: 600 }}>
+                  {post.username || post.creatorName}{" "}
+                </Text>
+                <Text style={{ fontSize: 18 }}>{post.title}</Text>
               </View>
             </View>
           </View>
@@ -295,7 +304,7 @@ const styles = StyleSheet.create({
   postImage: {
     height: 400,
     width: "100%",
-    resizeMode: 'contain',
-    backgroundColor: '#f1f2f5'
+    resizeMode: "contain",
+    backgroundColor: "#f1f2f5",
   },
 });
