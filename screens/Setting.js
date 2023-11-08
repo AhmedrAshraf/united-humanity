@@ -17,7 +17,7 @@ import { UserContext } from "../utils/UserContext";
 import React, { useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const SettingScreen = () => {
+const SettingScreen = ({ navigation }) => {
   const [user, setUser] = useState();
   const { uid, setUid } = useContext(UserContext);
 
