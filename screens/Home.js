@@ -169,9 +169,11 @@ const styles = StyleSheet.create({
   },
   post: {
     marginVertical: 10,
+    marginHorizontal: 10,
     padding: 5,
     paddingVertical: 10,
-    width: "100%",
+    width: "95%",
+    borderRadius: 10,
     backgroundColor: "#fff",
     alignItems: "center",
     flexDirection: "row",

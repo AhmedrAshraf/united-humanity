@@ -4,22 +4,47 @@ import {
   Image,
   TextInput,
   StyleSheet,
+  ScrollView,
   Dimensions,
   SafeAreaView,
+  RefreshControl,
   TouchableOpacity,
 } from "react-native";
 import { database } from "../firebase";
+import moment from "moment";
 import logo from "../assets/appLogo.png";
 import { Button } from "react-native-paper";
 import { doc, getDoc } from "firebase/firestore";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, Feather, MaterialIcons } from "@expo/vector-icons";
 import { UserContext } from "../utils/UserContext";
 import React, { useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  query,
+  collection,
+  onSnapshot,
+  orderBy,
+  where,
+} from "firebase/firestore";
 
 const Profile = ({ navigation }) => {
-  const [user, setUser] = useState();
   const { uid, setUid } = useContext(UserContext);
+
+  const [user, setUser] = useState();
+  const [posts, setPosts] = useState([]);
+
+  function getRelativeTime(createdAt) {
+    const now = moment();
+    const postTime = moment(createdAt);
+    const diff = now.diff(postTime, "minutes");
+
+    if (diff < 60) return `${diff} min ago`;
+    if (diff < 60 * 24) return `${Math.floor(diff / 60)} hr ago`;
+    if (diff < 60 * 24 * 30) return `${Math.floor(diff / (60 * 24))} d ago`;
+    if (diff < 60 * 24 * 30 * 12)
+      return `${Math.floor(diff / (60 * 24 * 30))} mo ago`;
+    return `${Math.floor(diff / (60 * 24 * 30 * 12))} yr ago`;
+  }
 
   useEffect(() => {
     getUser();
@@ -31,14 +56,37 @@ const Profile = ({ navigation }) => {
     });
   };
 
-  const handleLogout = () => {
-    setUid(null);
-    AsyncStorage.removeItem("uid");
-  };
-
   const uri =
     user?.profilePic ||
     "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
+
+  useEffect(() => {
+    getPosts();
+  }, []);
+
+  const getPosts = () => {
+    const q = query(
+      collection(database, "posts"),
+      where("userId", "==", uid),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const postsArray = snap.docs.map((doc) => {
+        const postData = doc.data();
+        const creatorPic =
+          postData.creatorPic || "https://default-profile-pic-url.com";
+        return {
+          ...postData,
+          id: doc.id,
+          creatorName: postData.creatorName,
+          creatorPic: creatorPic,
+        };
+      });
+      setPosts(postsArray);
+    });
+    return unsubscribe;
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -50,7 +98,7 @@ const Profile = ({ navigation }) => {
         />
         <Text style={{ fontSize: 20, fontWeight: "600" }}>Profile</Text>
         <TouchableOpacity
-          style={styles.logoutBut}
+          style={styles.settingBut}
           activeOpacity={0.8}
           onPress={() => navigation.navigate("Setting", user)}
         >
@@ -58,60 +106,71 @@ const Profile = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.ProfileContainer}>
-        <View activeOpacity={0.9} style={styles.contentContainer}>
-          <Image style={styles.previewImg} source={{ uri }} />
-          <Text style={styles.name}>{user?.name || "Loading..."}</Text>
+      <ScrollView refreshControl={<RefreshControl onRefresh={getPosts} />}>
+        <View style={styles.ProfileContainer}>
+          <View activeOpacity={0.9} style={styles.contentContainer}>
+            <Image style={styles.previewImg} source={{ uri }} />
+            <Text style={styles.name}>{user?.name || "Loading..."}</Text>
+          </View>
+          <View
+            style={{
+              flexDirection: "column",
+              alignItems: "flex-start",
+              justifyContent: "center",
+            }}>
+            <Text style={styles.email}>{user?.email || "Loading..."}</Text>
+            <Button
+              mode="contained"
+              uppercase={false}
+              style={styles.editBut}
+              onPress={() => navigation.navigate("Setting", user)}>
+              Edit Profile
+            </Button>
+          </View>
         </View>
-        <View
-          style={{
-            flexDirection: "column",
-            alignItems: "flex-start",
-            justifyContent: "center",
-          }}>
-          <Text style={styles.email}>{user?.email || "Loading..."}</Text>
-          <Button mode="contained" uppercase={false} style={styles.editBut}>
-            Edit Profile
-          </Button>
+
+        {posts.map((post, idx) => (
+          <View style={styles.post} key={idx}>
+            <View activeOpacity={0.9} style={styles.postContent}>
+              <View style={{ flexDirection: "row" }}>
+                <Image
+                  style={styles.creatorPic}
+                  source={{ uri: post.creatorPic || cpi }}
+                />
+                <Text style={styles.creatorName}>
+                  {post?.creatorName || "Loading..."}
+                </Text>
+              </View>
+              <View>
+                <Text style={styles.postTime}>
+                  {post.createdAt
+                    ? getRelativeTime(post.createdAt.toDate())
+                    : "Loading..."}
+                </Text>
+              </View>
+              <View style={{ marginTop: 20, marginLeft: 10 }}>
+                <Text style={{ fontSize: 22 }}>{post.title}</Text>
+
+                {post.imageUrl && (
+                  <Image
+                    source={{ uri: post.imageUrl }}
+                    style={styles.postImage}
+                  />
+                )}
+              </View>
+            </View>
+          </View>
+        ))}
+        <View style={styles.addButtonContainer}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              navigation.navigate("AddPostScreen");
+            }}>
+            <FontAwesome name="plus" size={20} color="white" />
+          </TouchableOpacity>
         </View>
-      </View>
-      <View style={styles.ProfileData}>
-        <View style={styles.inputBox}>
-          <Text style={styles.label}>
-            Full Name
-            <Text style={{ color: "#DA1414" }}> *</Text>
-          </Text>
-          <TextInput
-            editable={false}
-            style={styles.input}
-            placeholder="Full Name"
-            placeholderTextColor="gray"
-            value={user?.name || "----------"}
-          />
-        </View>
-        <View style={styles.inputBox}>
-          <Text style={styles.label}>
-            Email
-            <Text style={{ color: "#DA1414" }}> *</Text>
-          </Text>
-          <TextInput
-            editable={false}
-            style={styles.input}
-            placeholder="Username"
-            placeholderTextColor="gray"
-            value={user?.email || "----------"}
-          />
-        </View>
-      </View>
-      <Button
-        icon="logout"
-        mode="contained"
-        uppercase={false}
-        style={styles.but}
-        onPress={handleLogout}
-      >
-        Logout
-      </Button>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -121,7 +180,7 @@ export default Profile;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: "#f1f2f5",
   },
   header: {
     width: "100%",
@@ -130,20 +189,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-  },
-  logo: {
-    width: 60,
-    height: 60,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 18,
-    marginLeft: 10,
-    fontWeight: "600",
   },
   arrow: {
     fontSize: 30,
@@ -170,7 +215,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginRight: 20,
   },
-
   name: {
     fontSize: 18,
     marginLeft: 10,
@@ -181,59 +225,7 @@ const styles = StyleSheet.create({
     marginTop: -50,
     fontWeight: 500,
   },
-  editBox: {
-    right: 0,
-    bottom: 0,
-    top: 130,
-    left: 240,
-    width: 40,
-    height: 40,
-    borderRadius: 100,
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#62E1EF",
-  },
-  ProfileDetail: {
-    width: "100%",
-    alignItems: "center",
-    position: "relative",
-  },
-  ProfileData: {
-    paddingTop: 20,
-  },
-  input: {
-    fontSize: 15,
-    elevation: 4,
-    width: "100%",
-    marginTop: -5,
-    borderWidth: 1,
-    shadowRadius: 8,
-    marginBottom: 10,
-    fontWeight: "600",
-    borderRadius: 100,
-    shadowOpacity: 0.07,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderColor: "#EBEEF2",
-    shadowColor: "#470000",
-    backgroundColor: "white",
-    shadowOffset: { width: 0, height: 3 },
-  },
-  label: {
-    opacity: 0.8,
-    fontSize: 15,
-    marginLeft: 20,
-    marginBottom: 10,
-    color: "#2C3A4B",
-    fontWeight: "700",
-  },
-  inputBox: {
-    width: Dimensions.get("window").width,
-    paddingHorizontal: "5%",
-    marginTop: 5,
-  },
-  logoutBut: {
+  settingBut: {
     width: 35,
     height: 35,
     borderRadius: 50,
@@ -241,20 +233,47 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#009c55",
   },
-  but: {
-    bottom: 50,
-    width: "90%",
-    marginTop: 10,
-    borderRadius: 10,
-    paddingVertical: 3,
-    alignSelf: "center",
-    position: "absolute",
-    backgroundColor: "#009c55",
-  },
   editBut: {
     width: 120,
     marginTop: 10,
     borderRadius: 10,
     backgroundColor: "#009c55",
+  },
+  post: {
+    width: "95%",
+    padding: 5,
+    marginVertical: 10,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: "center",
+    flexDirection: "row",
+    marginHorizontal: 10,
+    backgroundColor: "#fff",
+    justifyContent: "space-between",
+  },
+  postContent: {
+    width: "100%",
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    flexDirection: "colun",
+  },
+  creatorPic: {
+    width: 50,
+    height: 50,
+    borderRadius: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "gainsboro",
+  },
+  creatorName: {
+    fontSize: 18,
+    marginLeft: 10,
+    fontWeight: "600",
+  },
+  postTime: {
+    fontSize: 18,
+    marginLeft: 60,
+    marginTop: -20,
+    color: "gray",
   },
 });
