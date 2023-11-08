@@ -28,7 +28,7 @@ import {
 } from "firebase/firestore";
 
 const Home = ({ navigation }) => {
-  const { uid, setUid } = useContext(UserContext);
+  const { user, uid, setUid } = useContext(UserContext);
   const [posts, setPosts] = useState([]);
 
   const uri =
@@ -75,14 +75,14 @@ const Home = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Image source={logo} style={styles.logo} />
+        <Image style={styles.profilePic} source={{ uri }} />
         <Text style={{ fontSize: 20, fontWeight: 600 }}>Home</Text>
         <TouchableOpacity
           style={styles.but}
           activeOpacity={0.8}
-          onPress={handleLogout}
+          onPress={() => navigation.navigate("Setting", user)}
         >
-          <MaterialIcons name={"logout"} size={18} color="white" />
+          <MaterialIcons name={"settings"} size={22} color="white" />
         </TouchableOpacity>
       </View>
       <ScrollView refreshControl={<RefreshControl onRefresh={getPosts} />}>
@@ -151,6 +151,7 @@ const styles = StyleSheet.create({
   },
   header: {
     width: "95%",
+    marginBottom: 10,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -253,6 +254,14 @@ const styles = StyleSheet.create({
   previewImg: {
     width: 50,
     height: 50,
+    borderRadius: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "gainsboro",
+  },
+  profilePic: {
+    width: 40,
+    height: 40,
     borderRadius: 120,
     alignItems: "center",
     justifyContent: "center",
