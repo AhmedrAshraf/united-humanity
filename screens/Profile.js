@@ -148,15 +148,17 @@ const Profile = ({ navigation }) => {
                     : "Loading..."}
                 </Text>
               </View>
-              <View style={{ marginTop: 20, marginLeft: 10 }}>
-                <Text style={{ fontSize: 22 }}>{post.title}</Text>
-
+              <View style={{ marginTop: 20 }}>
                 {post.imageUrl && (
                   <Image
                     source={{ uri: post.imageUrl }}
                     style={styles.postImage}
                   />
                 )}
+              </View>
+              <View style={{ marginTop: 20, flexDirection: "row" }}>
+                <Text style={{ fontSize: 18, fontWeight: 600 }}>{post.username || post.creatorName} </Text>
+                <Text style={{ fontSize: 18}}>{post.title}</Text>
               </View>
             </View>
           </View>
@@ -277,5 +279,10 @@ const styles = StyleSheet.create({
     marginLeft: 60,
     marginTop: -20,
     color: "gray",
+  },
+  postImage: {
+    height: 400,
+    width: "100%",
+    resizeMode: 'contain',
   },
 });

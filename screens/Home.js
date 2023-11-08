@@ -295,5 +295,7 @@ const styles = StyleSheet.create({
   postImage: {
     height: 400,
     width: "100%",
+    resizeMode: 'contain',
+    backgroundColor: '#f1f2f5'
   },
 });
