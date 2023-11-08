@@ -34,6 +34,7 @@ const AddPostScreen = ({ navigation }) => {
   };
 
   const uri =
+    user?.profilePic ||
     "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   const getMediaLibraryPermission = async () => {
@@ -65,28 +66,26 @@ const AddPostScreen = ({ navigation }) => {
     }
   };
 
+  console.log("user", user)
+
   const createPost = async () => {
-    // Check if title and image are provided
+
     if (!title && !image) {
       alert("Please provide a title and select an image for your post.");
       return;
     }
 
     try {
-      // Create a new post document in Firestore with an auto-generated ID
+
       const postCollection = collection(database, "posts");
       const post = {
         title,
         creatorName: user?.name,
         imageUrl: image || null,
-        userId: uid, // Link the post to the user who created it
+        userId: uid,
+        creatorPic: user?.profilePic,
         createdAt: new Date(),
       };
-
-      const newPostRef = await addDoc(postCollection, post);
-
-      // Use the newly generated document ID
-      console.log("New Post ID:", newPostRef.id);
 
       navigation.goBack();
     } catch (error) {

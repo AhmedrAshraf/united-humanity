@@ -32,12 +32,11 @@ const Home = ({ navigation }) => {
   const [posts, setPosts] = useState([]);
 
   const uri =
+    user?.profilePic ||
     "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
-  const handleLogout = () => {
-    AsyncStorage.removeItem("uid");
-    setUid(null);
-  };
+  const cpi =
+    "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   useEffect(() => {
     getPosts();
@@ -46,14 +45,21 @@ const Home = ({ navigation }) => {
   const getPosts = () => {
     const q = query(
       collection(database, "posts"),
-      orderBy("createdAt", "desc") // Order by the latest posts
+      orderBy("createdAt", "desc")
     );
+
     const unsubscribe = onSnapshot(q, (snap) => {
-      const postsArray = snap.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-        creatorName: doc.data().creatorName, // Add this line
-      }));
+      const postsArray = snap.docs.map((doc) => {
+        const postData = doc.data();
+        const creatorPic =
+          postData.creatorPic || "https://default-profile-pic-url.com";
+        return {
+          ...postData,
+          id: doc.id,
+          creatorName: postData.creatorName,
+          creatorPic: creatorPic,
+        };
+      });
       setPosts(postsArray);
     });
     return unsubscribe;
@@ -88,10 +94,10 @@ const Home = ({ navigation }) => {
       <ScrollView refreshControl={<RefreshControl onRefresh={getPosts} />}>
         {posts.map((post, idx) => (
           <View style={styles.post} key={idx}>
-            {console.log(post)}
+
             <View activeOpacity={0.9} style={styles.content}>
               <View style={{ flexDirection: "row" }}>
-                <Image style={styles.previewImg} source={{ uri }} />
+                <Image style={styles.previewImg} source={{ uri: post.creatorPic || cpi }} />
                 <Text style={styles.name}>
                   {post?.creatorName || "Loading..."}
                 </Text>
@@ -105,13 +111,14 @@ const Home = ({ navigation }) => {
               </View>
               <View style={{ marginTop: 20, marginLeft: 10 }}>
                 <Text style={{ fontSize: 22 }}>{post.title}</Text>
-                {/* You can also display the post image if available */}
+
                 {post.imageUrl && (
                   <Image
                     source={{ uri: post.imageUrl }}
                     style={styles.postImage}
                   />
                 )}
+
               </View>
             </View>
           </View>

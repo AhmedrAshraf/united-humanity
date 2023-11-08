@@ -37,6 +37,7 @@ const SettingScreen = ({ navigation }) => {
   };
 
   const uri =
+    user?.profilePic ||
     "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   return (
