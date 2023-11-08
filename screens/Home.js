@@ -94,31 +94,31 @@ const Home = ({ navigation }) => {
       <ScrollView refreshControl={<RefreshControl onRefresh={getPosts} />}>
         {posts.map((post, idx) => (
           <View style={styles.post} key={idx}>
-
             <View activeOpacity={0.9} style={styles.content}>
-              <View style={{ flexDirection: "row" }}>
+              <View style={{ flexDirection: "row", paddingHorizontal: 10 }}>
                 <Image style={styles.previewImg} source={{ uri: post.creatorPic || cpi }} />
                 <Text style={styles.name}>
                   {post?.creatorName || "Loading..."}
                 </Text>
               </View>
-              <View>
+              <View style={{ paddingHorizontal: 10 }}>
                 <Text style={styles.postTime}>
                   {post.createdAt
                     ? getRelativeTime(post.createdAt.toDate())
                     : "Loading..."}
                 </Text>
               </View>
-              <View style={{ marginTop: 20, marginLeft: 10 }}>
-                <Text style={{ fontSize: 22 }}>{post.title}</Text>
-
+              <View style={{ marginTop: 20 }}>
                 {post.imageUrl && (
                   <Image
                     source={{ uri: post.imageUrl }}
                     style={styles.postImage}
                   />
                 )}
-
+              </View>
+              <View style={{ marginTop: 20, flexDirection: "row" }}>
+                <Text style={{ fontSize: 22, fontWeight: 600 }}>{post.creatorName} </Text>
+                <Text style={{ fontSize: 22 }}>{post.title}</Text>
               </View>
             </View>
           </View>
@@ -279,9 +279,7 @@ const styles = StyleSheet.create({
   content: {
     width: "100%",
     marginBottom: 10,
-    paddingHorizontal: 10,
     flexDirection: "colun",
-    // alignItems: "center",
   },
   name: {
     fontSize: 18,
@@ -293,5 +291,9 @@ const styles = StyleSheet.create({
     marginLeft: 60,
     marginTop: -20,
     color: "gray",
+  },
+  postImage: {
+    height: 400,
+    width: "100%",
   },
 });
