@@ -58,16 +58,24 @@ const Profile = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.SettingContainer}>
-        <View activeOpacity={0.9} style={styles.content}>
+      <View style={styles.ProfileContainer}>
+        <View activeOpacity={0.9} style={styles.contentContainer}>
           <Image style={styles.previewImg} source={{ uri }} />
-        </View>
-        <View style={styles.SettingDetail}>
           <Text style={styles.name}>{user?.name || "Loading..."}</Text>
+        </View>
+        <View
+          style={{
+            flexDirection: "column",
+            alignItems: "flex-start",
+            justifyContent: "center",
+          }}>
           <Text style={styles.email}>{user?.email || "Loading..."}</Text>
+          <Button mode="contained" uppercase={false} style={styles.editBut}>
+            Edit Profile
+          </Button>
         </View>
       </View>
-      <View style={styles.SettingData}>
+      <View style={styles.ProfileData}>
         <View style={styles.inputBox}>
           <Text style={styles.label}>
             Full Name
@@ -141,33 +149,37 @@ const styles = StyleSheet.create({
     fontSize: 30,
     color: "#009c55",
   },
-  SettingContainer: {
+  ProfileContainer: {
     width: "100%",
     paddingBottom: 20,
+    paddingHorizontal: 15,
     borderBottomWidth: 1,
-    alignContent: "center",
+    flexDirection: "row",
     borderBottomColor: "gainsboro",
+    alignItems: "center",
   },
   previewImg: {
     width: 90,
     height: 90,
+    marginBottom: 20,
     borderRadius: 120,
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "gainsboro",
   },
-  content: {
-    width: "100%",
-    marginBottom: 10,
-    alignItems: "center",
+  contentContainer: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    marginRight: 20,
   },
+
   name: {
     fontSize: 18,
     marginLeft: 10,
     fontWeight: "600",
   },
   email: {
-    fontSize: 16,
+    fontSize: 20,
+    marginTop: -50,
+    fontWeight: 500,
   },
   editBox: {
     right: 0,
@@ -182,12 +194,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#62E1EF",
   },
-  SettingDetail: {
+  ProfileDetail: {
     width: "100%",
     alignItems: "center",
     position: "relative",
   },
-  SettingData: {
+  ProfileData: {
     paddingTop: 20,
   },
   input: {
@@ -237,6 +249,12 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     alignSelf: "center",
     position: "absolute",
+    backgroundColor: "#009c55",
+  },
+  editBut: {
+    width: 120,
+    marginTop: 10,
+    borderRadius: 10,
     backgroundColor: "#009c55",
   },
 });
