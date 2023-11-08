@@ -110,15 +110,15 @@ const Profile = ({ navigation }) => {
         <View style={styles.ProfileContainer}>
           <View activeOpacity={0.9} style={styles.contentContainer}>
             <Image style={styles.previewImg} source={{ uri }} />
-            <Text style={styles.name}>{user?.name || "Loading..."}</Text>
           </View>
+          <Text style={styles.name}>{user?.name || "Loading..."}</Text>
           <View
             style={{
               flexDirection: "column",
               alignItems: "flex-start",
               justifyContent: "center",
             }}>
-            <Text style={styles.email}>{user?.email || "Loading..."}</Text>
+            <Text style={styles.userName}>{user?.username || "Loading..."}</Text>
             <Button
               mode="contained"
               uppercase={false}
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   ProfileContainer: {
     width: "100%",
-    paddingBottom: 20,
+    paddingBottom: 50,
     paddingHorizontal: 15,
     borderBottomWidth: 1,
     flexDirection: "row",
@@ -216,13 +216,15 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   name: {
+    position: "absolute",
+    left: 10,
+    bottom: 25,
     fontSize: 18,
-    marginLeft: 10,
     fontWeight: "600",
   },
-  email: {
+  userName: {
     fontSize: 20,
-    marginTop: -50,
+    marginTop: -20,
     fontWeight: 500,
   },
   settingBut: {

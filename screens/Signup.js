@@ -82,6 +82,7 @@ const CreateAdminScreen = ({ navigation }) => {
       alert("Please fill all the fields");
     } else {
       setLoading(true);
+      const username = email.split("@")[0] + Math.floor(Math.random() * 1000);
       createUserWithEmailAndPassword(auth, email, password)
         .then(async (userInfo) => {
           AsyncStorage.setItem("uid", userInfo.user.uid);
@@ -92,6 +93,7 @@ const CreateAdminScreen = ({ navigation }) => {
               uid: userInfo.user.uid,
               email,
               name,
+              username,
               token: pushToken || "",
             });
             setName("");
