@@ -24,6 +24,7 @@ const AddPostScreen = ({ navigation }) => {
   const { uid, setUid } = useContext(UserContext);
 
   useEffect(() => {
+    pickImage();
     getUser();
   }, []);
 
@@ -70,8 +71,8 @@ const AddPostScreen = ({ navigation }) => {
 
   const createPost = async () => {
 
-    if (!title && !image) {
-      alert("Please provide a title and select an image for your post.");
+    if (!image) {
+      alert("Please select an image for your post.");
       return;
     }
 
@@ -80,13 +81,18 @@ const AddPostScreen = ({ navigation }) => {
       const postCollection = collection(database, "posts");
       const post = {
         title,
-        creatorName: user?.name,
+        creatorName: user.name || null,
+        username: user.username || null,
         imageUrl: image || null,
         userId: uid,
-        creatorPic: user?.profilePic,
+        creatorPic: user.profilePic || null,
         createdAt: new Date(),
       };
 
+      const postRef = await addDoc(postCollection, post);
+      setTitle("");
+      setImage(null);
+      setIsImageSelected(false);
       navigation.goBack();
     } catch (error) {
       console.error("Error creating post:", error);

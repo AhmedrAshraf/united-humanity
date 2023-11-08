@@ -98,7 +98,7 @@ const Home = ({ navigation }) => {
               <View style={{ flexDirection: "row", paddingHorizontal: 10 }}>
                 <Image style={styles.previewImg} source={{ uri: post.creatorPic || cpi }} />
                 <Text style={styles.name}>
-                  {post?.creatorName || "Loading..."}
+                  {post?.username || post?.creatorName || "Loading..."}
                 </Text>
               </View>
               <View style={{ paddingHorizontal: 10 }}>
@@ -117,8 +117,8 @@ const Home = ({ navigation }) => {
                 )}
               </View>
               <View style={{ marginTop: 20, flexDirection: "row" }}>
-                <Text style={{ fontSize: 22, fontWeight: 600 }}>{post.creatorName} </Text>
-                <Text style={{ fontSize: 22 }}>{post.title}</Text>
+                <Text style={{ fontSize: 18, fontWeight: 600 }}>{post.username || post.creatorName} </Text>
+                <Text style={{ fontSize: 18}}>{post.title}</Text>
               </View>
             </View>
           </View>
