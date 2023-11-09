@@ -26,6 +26,7 @@ import {
   onSnapshot,
   orderBy,
 } from "firebase/firestore";
+import Swiper from "react-native-swiper";
 
 const Home = ({ navigation }) => {
   const { user, uid, setUid } = useContext(UserContext);
@@ -115,12 +116,22 @@ const Home = ({ navigation }) => {
                     : "Loading..."}
                 </Text>
               </View>
-              <View style={{ marginTop: 20 }}>
-                {post.imageUrl && (
+              <View style={{ marginTop: 20, flexDirection: "row" }}>
+                {post.imageUrl &&
+                Array.isArray(post.imageUrl) &&
+                post.imageUrl.length > 0 && (
+                <Swiper
+                style={styles.swiperContainer}
+                showsButtons={false}
+                autoplay={false}>
+                  {post.imageUrl.map((url, index) => (
                   <Image
-                    source={{ uri: post.imageUrl }}
-                    style={styles.postImage}
+                  key={index}
+                  source={{ uri: url }}
+                  style={styles.postImage}
                   />
+                  ))}
+                  </Swiper>
                 )}
               </View>
               <View style={{ marginTop: 20, flexDirection: "row" }}>
@@ -306,5 +317,9 @@ const styles = StyleSheet.create({
     width: "100%",
     resizeMode: "contain",
     backgroundColor: "#f1f2f5",
+  },
+  swiperContainer: {
+    height: 400,
+    width: "100%",
   },
 });
