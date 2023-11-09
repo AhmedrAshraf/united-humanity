@@ -135,7 +135,7 @@ const Profile = ({ navigation }) => {
               <View style={{ flexDirection: "row" }}>
                 <Image
                   style={styles.creatorPic}
-                  source={{ uri: post.creatorPic || cpi }}
+                  source={{ uri: post?.creatorPic || cpi }}
                 />
                 <Text style={styles.creatorName}>
                   {post?.creatorName || "Loading..."}

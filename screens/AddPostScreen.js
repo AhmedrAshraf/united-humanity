@@ -1,38 +1,27 @@
-import React, { useContext, useEffect, useState } from "react";
 import {
-  SafeAreaView,
   Text,
   View,
-  TextInput,
-  Button,
   Image,
+  TextInput,
   StyleSheet,
+  SafeAreaView,
   TouchableOpacity,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
-import { doc, getDoc, addDoc, collection } from "firebase/firestore";
-import { UserContext } from "../utils/UserContext";
+import { database, storage } from "../firebase";
 import * as ImagePicker from "expo-image-picker";
-import { database } from "../firebase";
+import { MaterialIcons } from "@expo/vector-icons";
+import { UserContext } from "../utils/UserContext";
+import React, { useContext, useEffect, useState } from "react";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
 
 const AddPostScreen = ({ navigation }) => {
+  const { uid, user } = useContext(UserContext);
+
   const [title, setTitle] = useState("");
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [isImageSelected, setIsImageSelected] = useState(false);
-
-  const [user, setUser] = useState();
-  const { uid, setUid } = useContext(UserContext);
-
-  useEffect(() => {
-    pickImage();
-    getUser();
-  }, []);
-
-  const getUser = () => {
-    getDoc(doc(database, "users", uid)).then((docData) => {
-      setUser(docData.data());
-    });
-  };
 
   const uri =
     user?.profilePic ||
@@ -50,34 +39,53 @@ const AddPostScreen = ({ navigation }) => {
   const pickImage = async () => {
     const hasPermission = await getMediaLibraryPermission();
     if (!hasPermission) {
+      // ImagePicker.getMediaLibraryPermissionsAsync();
       return;
     }
-
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
-
     if (!result.canceled) {
-      console.log("Selected image URI:", result.uri);
-      setImage(result.uri);
       setIsImageSelected(true);
+      setImage(result.assets[0].uri);
+      handleUpload(result.assets[0].uri);
     }
   };
 
-  console.log("user", user)
+  const handleUpload = async (img) => {
+    console.log("🚀 ~ file: AddPostScreen.js:63 ~ handleUpload ~ img:", img)
+    let res = await fetch(img);
+    let blob = await res.blob();
+    console.log("🚀 ~ file: AddPostScreen.js:66 ~ handleUpload ~ blob:", blob)
+    let nam = Date.now().toString();
+    console.log("🚀 ~ file: AddPostScreen.js:67 ~ handleUpload ~ nam:", nam)
+    const storeRef = ref(storage, nam);
+    console.log("🚀 ~ file: AddPostScreen.js:69 ~ handleUpload ~ storeRef:", storeRef)
+    await uploadBytes(storeRef, blob);
+    getDownloadURL(storeRef)
+      .then(async (url) => {
+        console.log("🚀 ~ file: AddPostScreen.js:72 ~ .then ~ url:", url)
+        // await updateDoc(doc(database, "users", user.uid), { image: url });
+        setImage(url);
+        setLoading(false);
+        alert("Profile Picture Uploaded");
+      })
+      .catch((err) => {
+        alert(err);
+        setLoading(false);
+      });
+  };
 
   const createPost = async () => {
-
     if (!image) {
       alert("Please select an image for your post.");
       return;
     }
 
     try {
-
       const postCollection = collection(database, "posts");
       const post = {
         title,
@@ -100,7 +108,6 @@ const AddPostScreen = ({ navigation }) => {
     }
   };
 
-  console.log("users:", user);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>

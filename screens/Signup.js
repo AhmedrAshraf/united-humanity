@@ -69,7 +69,6 @@ const CreateAdminScreen = ({ navigation }) => {
           projectId: "fbc38cbf-12b5-4fb6-bc5f-481900e84d07",
         })
       ).data;
-      console.log(token);
     } else {
       alert("Must use physical device for Push Notifications");
     }

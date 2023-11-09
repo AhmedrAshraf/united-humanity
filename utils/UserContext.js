@@ -7,21 +7,15 @@ export const UserContext = createContext();
 function UserProvider(props) {
   const [uid, setUid] = useState("");
   const [user, setUser] = useState();
-  
+
   useEffect(() => {
     getUser();
   }, [uid]);
-  
+
   const getUser = () => {
     if (uid) {
-      const userDocRef = doc(database, "users", uid);
-      getDoc(userDocRef)
-        .then((docData) => {
-          setUser(docData.data());
-        })
-        .catch((error) => {
-          console.error("Error fetching user document:", error);
-        });
+      const userRef = doc(database, "users", uid);
+      getDoc(userRef).then((item) => setUser({ ...item.data(), uid: item.id }));
     }
   };
 

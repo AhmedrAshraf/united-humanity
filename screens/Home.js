@@ -2,7 +2,6 @@ import {
   Text,
   View,
   Image,
-  TextInput,
   StyleSheet,
   Dimensions,
   ScrollView,
@@ -12,24 +11,20 @@ import {
 } from "react-native";
 import moment from "moment";
 import { database } from "../firebase";
-import logo from "../assets/appLogo.png";
 import { UserContext } from "../utils/UserContext";
-import { Image as OptimizedImage } from "expo-image";
-import Icon from "@expo/vector-icons/MaterialCommunityIcons";
 import React, { useContext, useEffect, useState } from "react";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   query,
-  where,
   collection,
   onSnapshot,
   orderBy,
+  getDocs,
 } from "firebase/firestore";
 import Swiper from "react-native-swiper";
 
 const Home = ({ navigation }) => {
-  const { user, uid, setUid } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const [posts, setPosts] = useState([]);
 
   const uri =
@@ -48,22 +43,10 @@ const Home = ({ navigation }) => {
       collection(database, "posts"),
       orderBy("createdAt", "desc")
     );
-
-    const unsubscribe = onSnapshot(q, (snap) => {
-      const postsArray = snap.docs.map((doc) => {
-        const postData = doc.data();
-        const creatorPic =
-          postData.creatorPic || "https://default-profile-pic-url.com";
-        return {
-          ...postData,
-          id: doc.id,
-          creatorName: postData.creatorName,
-          creatorPic: creatorPic,
-        };
-      });
-      setPosts(postsArray);
+    getDocs(q).then((snap) => {
+      let list = snap.docs.map((e) => e.data());
+      setPosts(list);
     });
-    return unsubscribe;
   };
 
   function getRelativeTime(createdAt) {
@@ -84,7 +67,8 @@ const Home = ({ navigation }) => {
       <View style={styles.header}>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => navigation.navigate("Profile", user)}>
+          onPress={() => navigation.navigate("Profile", user)}
+        >
           <Image style={styles.profilePic} source={{ uri }} />
         </TouchableOpacity>
         <Text style={{ fontSize: 20, fontWeight: 600 }}>Home</Text>
@@ -96,51 +80,44 @@ const Home = ({ navigation }) => {
           <MaterialIcons name={"settings"} size={22} color="white" />
         </TouchableOpacity>
       </View>
-      <ScrollView refreshControl={<RefreshControl onRefresh={getPosts} />}>
+      <ScrollView
+        style={{ width: "100%" }}
+        refreshControl={<RefreshControl onRefresh={getPosts} />}
+      >
         {posts.map((post, idx) => (
           <View style={styles.post} key={idx}>
-            <View activeOpacity={0.9} style={styles.content}>
-              <View style={{ flexDirection: "row", paddingHorizontal: 10 }}>
-                <Image
-                  style={styles.previewImg}
-                  source={{ uri: post.creatorPic || cpi }}
-                />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Image
+                style={styles.previewImg}
+                source={{ uri: post?.creatorPic || cpi }}
+              />
+              <View style={{ marginLeft: 10 }}>
                 <Text style={styles.name}>
-                  {post?.username || post?.creatorName || "Loading..."}
+                  {post?.username || post?.creatorName}
                 </Text>
-              </View>
-              <View style={{ paddingHorizontal: 10 }}>
                 <Text style={styles.postTime}>
-                  {post.createdAt
-                    ? getRelativeTime(post.createdAt.toDate())
-                    : "Loading..."}
+                  {post.createdAt && getRelativeTime(post?.createdAt?.toDate())}
                 </Text>
               </View>
-              <View style={{ marginTop: 20, flexDirection: "row" }}>
-                {post.imageUrl &&
-                Array.isArray(post.imageUrl) &&
-                post.imageUrl.length > 0 && (
-                <Swiper
-                style={styles.swiperContainer}
-                showsButtons={false}
-                autoplay={false}>
-                  {post.imageUrl.map((url, index) => (
-                  <Image
+            </View>
+            <Swiper
+              containerStyle={styles.swiperContainer}
+              activeDotColor="white"
+              showsButtons={false}
+              dotColor="silver"
+              autoplay={true}
+            >
+              {post?.imageUrl?.map((url, index) => (
+                <Image
                   key={index}
                   source={{ uri: url }}
                   style={styles.postImage}
-                  />
-                  ))}
-                  </Swiper>
-                )}
-              </View>
-              <View style={{ marginTop: 20, flexDirection: "row" }}>
-                <Text style={{ fontSize: 18, fontWeight: 600 }}>
-                  {post.username || post.creatorName}{" "}
-                </Text>
-                <Text style={{ fontSize: 18 }}>{post.title}</Text>
-              </View>
-            </View>
+                />
+              ))}
+            </Swiper>
+            <Text style={{ fontSize: 16, marginLeft: 10, fontWeight: "600" }}>
+              {post.title}
+            </Text>
           </View>
         ))}
       </ScrollView>
@@ -165,22 +142,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f1f2f5",
+    backgroundColor: "#ffffff",
   },
   but: {
     width: 35,
     height: 35,
-    marginRight: 10,
     borderRadius: 50,
     alignItems: "center",
     backgroundColor: "#009c55",
     justifyContent: "center",
   },
   header: {
-    width: "95%",
-    marginBottom: 10,
+    width: "100%",
+    paddingBottom: 20,
     alignItems: "center",
     flexDirection: "row",
+    paddingHorizontal: 25,
+    shadowColor: "gainsboro",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    backgroundColor: "white",
     justifyContent: "space-between",
   },
   logo: {
@@ -188,15 +170,17 @@ const styles = StyleSheet.create({
     height: 60,
   },
   post: {
-    marginVertical: 10,
-    marginHorizontal: 10,
-    padding: 5,
+    marginTop: 25,
+    padding: 10,
     paddingVertical: 10,
-    width: "95%",
+    width: "92%",
+    marginHorizontal: "4%",
+    shadowColor: "gainsboro",
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
     borderRadius: 10,
     backgroundColor: "#fff",
-    alignItems: "center",
-    flexDirection: "row",
     justifyContent: "space-between",
   },
   leftBox: {
@@ -281,11 +265,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   previewImg: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
+    marginLeft: 10,
     borderRadius: 120,
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "gainsboro",
   },
   profilePic: {
@@ -296,30 +279,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "gainsboro",
   },
-  content: {
-    width: "100%",
-    marginBottom: 10,
-    flexDirection: "colun",
-  },
   name: {
     fontSize: 18,
-    marginLeft: 10,
     fontWeight: "600",
   },
   postTime: {
-    fontSize: 18,
-    marginLeft: 60,
-    marginTop: -20,
+    fontSize: 14,
     color: "gray",
   },
   postImage: {
-    height: 400,
-    width: "100%",
-    resizeMode: "contain",
+    height: 340,
+    width: "95%",
+    borderRadius: 5,
+    marginVertical: 10,
+    alignSelf: "center",
     backgroundColor: "#f1f2f5",
   },
   swiperContainer: {
-    height: 400,
+    height: 360,
     width: "100%",
   },
 });
