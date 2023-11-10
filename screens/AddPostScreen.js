@@ -14,12 +14,13 @@ import { UserContext } from "../utils/UserContext";
 import React, { useContext, useEffect, useState } from "react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
+import Swiper from "react-native-swiper";
 
 const AddPostScreen = ({ navigation }) => {
   const { uid, user } = useContext(UserContext);
 
   const [title, setTitle] = useState("");
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isImageSelected, setIsImageSelected] = useState(false);
 
@@ -50,56 +51,54 @@ const AddPostScreen = ({ navigation }) => {
     });
     if (!result.canceled) {
       setIsImageSelected(true);
-      setImage(result.assets[0].uri);
       handleUpload(result.assets[0].uri);
     }
   };
 
   const handleUpload = async (img) => {
-    console.log("🚀 ~ file: AddPostScreen.js:63 ~ handleUpload ~ img:", img)
-    let res = await fetch(img);
-    let blob = await res.blob();
-    console.log("🚀 ~ file: AddPostScreen.js:66 ~ handleUpload ~ blob:", blob)
-    let nam = Date.now().toString();
-    console.log("🚀 ~ file: AddPostScreen.js:67 ~ handleUpload ~ nam:", nam)
-    const storeRef = ref(storage, nam);
-    console.log("🚀 ~ file: AddPostScreen.js:69 ~ handleUpload ~ storeRef:", storeRef)
-    await uploadBytes(storeRef, blob);
-    getDownloadURL(storeRef)
-      .then(async (url) => {
-        console.log("🚀 ~ file: AddPostScreen.js:72 ~ .then ~ url:", url)
-        // await updateDoc(doc(database, "users", user.uid), { image: url });
-        setImage(url);
+    try {
+      console.log("🚀 ~ file: AddPostScreen.js:63 ~ handleUpload ~ img:", img)
+      let res = await fetch(img);
+      let blob = await res.blob();
+      console.log("🚀 ~ file: AddPostScreen.js:66 ~ handleUpload ~ blob:", blob)
+      let nam = Date.now().toString();
+      console.log("🚀 ~ file: AddPostScreen.js:67 ~ handleUpload ~ nam:", nam)
+      const storeRef = ref(storage, nam);
+      console.log( "🚀 ~ file: AddPostScreen.js:69 ~ handleUpload ~ storeRef:", storeRef)
+      await uploadBytes(storeRef, blob);
+      const url = await getDownloadURL(storeRef);
+      setImage((prevImages) => [...prevImages, url]);
         setLoading(false);
-        alert("Profile Picture Uploaded");
-      })
-      .catch((err) => {
-        alert(err);
-        setLoading(false);
-      });
+      console.log("🚀 ~ file: AddPostScreen.js:72 ~ .then ~ url:", url);
+    } catch (err) {
+      alert(err);
+      setLoading(false);
+    }
   };
 
   const createPost = async () => {
-    if (!image) {
-      alert("Please select an image for your post.");
+    if (!image || image.length === 0) {
+      alert("Please select at least one image for your post.");
       return;
     }
 
     try {
       const postCollection = collection(database, "posts");
-      const post = {
-        title,
-        creatorName: user.name || null,
-        username: user.username || null,
-        imageUrl: image || null,
-        userId: uid,
-        creatorPic: user.profilePic || null,
-        createdAt: new Date(),
-      };
+      for (let i = 0; i < image.length; i++) {
+        const post = {
+          title,
+          creatorName: user.name || null,
+          username: user.username || null,
+          imageUrl: image[i] || null,
+          userId: uid,
+          creatorPic: user.profilePic || null,
+          createdAt: new Date(),
+        };
 
-      const postRef = await addDoc(postCollection, post);
+        await addDoc(postCollection, post);
+      }
       setTitle("");
-      setImage(null);
+      setImage([null]);
       setIsImageSelected(false);
       navigation.goBack();
     } catch (error) {
@@ -134,6 +133,21 @@ const AddPostScreen = ({ navigation }) => {
           onChangeText={(text) => setTitle(text)}
         />
       </View>
+      <Swiper
+        containerStyle={styles.swiperContainer}
+        activeDotColor="white"
+        showsButtons={false}
+        dotColor="silver"
+        autoplay={true}
+      >
+        {image.map((selectedImage, index) => (
+          <Image
+            key={index}
+            source={{ uri: selectedImage }}
+            style={styles.postImage}
+          />
+        ))}
+      </Swiper>
       <View style={styles.addButtonContainer}>
         <TouchableOpacity style={styles.addButton} onPress={pickImage}>
           <MaterialIcons name="add-a-photo" size={22} color="white" />
@@ -205,5 +219,13 @@ const styles = StyleSheet.create({
     color: "#000",
     flexWrap: "wrap",
     overflow: "visible",
+  },
+  postImage: {
+    height: 340,
+    width: "95%",
+    borderRadius: 5,
+    marginVertical: 10,
+    alignSelf: "center",
+    backgroundColor: "#f1f2f5",
   },
 });
