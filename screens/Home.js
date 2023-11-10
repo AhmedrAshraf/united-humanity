@@ -45,7 +45,8 @@ const Home = ({ navigation }) => {
     );
     getDocs(q).then((snap) => {
       let list = snap.docs.map((e) => e.data());
-      setPosts(list);
+      const filteredPosts = list.filter((post) => post.userId !== user.uid);
+      setPosts(filteredPosts);
     });
   };
 
