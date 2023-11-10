@@ -107,7 +107,8 @@ const Home = ({ navigation }) => {
               dotColor="silver"
               autoplay={true}
             >
-              {post?.imageUrl?.map((url, index) => (
+              {Array.isArray(post?.imageUrl) &&
+               post?.imageUrl?.map((url, index) => (
                 <Image
                   key={index}
                   source={{ uri: url }}
