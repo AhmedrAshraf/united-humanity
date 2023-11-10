@@ -69,7 +69,7 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.box}>
             <Text
               onPress={() => navigation.navigate("login")}
-              style={[styles.txt, { color: "#009c55", fontWeight: "600" }]}
+              style={[styles.txt, { color: "#01AEF0", fontWeight: "600" }]}
             >
               Login
             </Text>
@@ -89,7 +89,7 @@ const LoginScreen = ({ navigation }) => {
         <Modal transparent={true} animationType="fade" visible={loading}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <ActivityIndicator size={40} color="#009c55" />
+              <ActivityIndicator size={40} color="#01AEF0" />
             </View>
           </View>
         </Modal>
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderRadius: 5,
     paddingVertical: 5,
-    backgroundColor: "#009c55",
+    backgroundColor: "#01AEF0",
   },
   centeredView: {
     flex: 1,

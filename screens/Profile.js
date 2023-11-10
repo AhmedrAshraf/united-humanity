@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     width: 120,
     marginTop: 10,
     borderRadius: 10,
-    backgroundColor: "#009c55",
+    backgroundColor: "#01AEF0",
   },
   post: {
     width: "95%",

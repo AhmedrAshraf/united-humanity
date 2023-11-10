@@ -234,6 +234,6 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     alignSelf: "center",
     position: "absolute",
-    backgroundColor: "#009c55",
+    backgroundColor: "#01AEF0",
   },
 });

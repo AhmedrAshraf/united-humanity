@@ -13,7 +13,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import * as Device from "expo-device";
-import logo from "../assets/appLogo.png";
+import logo from "../assets/logo.png";
 import { auth, database } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { UserContext } from "../utils/UserContext";
@@ -121,7 +121,7 @@ const CreateAdminScreen = ({ navigation }) => {
         <StatusBar style="light" />
         <View style={styles.container}>
           <Image source={logo} style={styles.logo} />
-          <Text style={styles.appName}>Chat Room</Text>
+          <Text style={styles.appName}>United Humanity</Text>
           <Text style={styles.heading}>Create a new account</Text>
           <View style={Platform.isPad ? styles.ph : styles.inputBox}>
             <Text style={styles.label}>
@@ -187,7 +187,7 @@ const CreateAdminScreen = ({ navigation }) => {
               onPress={() => navigation.navigate("login")}
             >
               Already have an account?{" "}
-              <Text style={{ color: "#009c55", fontWeight: "600" }}>
+              <Text style={{ color: "#01AEF0", fontWeight: "600" }}>
                 Sing in
               </Text>
             </Text>
@@ -206,7 +206,7 @@ const CreateAdminScreen = ({ navigation }) => {
         <Modal transparent={true} animationType="fade" visible={loading}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <ActivityIndicator size={40} color="#009c55" />
+              <ActivityIndicator size={40} color="#01AEF0" />
             </View>
           </View>
         </Modal>
@@ -240,6 +240,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     marginBottom: 60,
+    marginTop: 10,
     fontWeight: "800",
   },
   input: {
@@ -250,7 +251,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     marginBottom: 20,
     fontWeight: "600",
-    borderRadius: 10,
+    borderRadius: 100,
     shadowOpacity: 0.07,
     paddingVertical: 15,
     paddingHorizontal: 20,
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderRadius: 10,
     paddingVertical: 3,
-    backgroundColor: "#009c55",
+    backgroundColor: "#01AEF0",
   },
   continueText: {
     fontSize: 16,

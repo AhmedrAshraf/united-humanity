@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { auth } from "../firebase";
 import * as Device from "expo-device";
-import logo from "../assets/appLogo.png";
+import logo from "../assets/logo.png";
 import { StatusBar } from "expo-status-bar";
 import { doc, updateDoc } from "firebase/database";
 import { UserContext } from "../utils/UserContext";
@@ -110,7 +110,7 @@ const LoginScreen = ({ navigation }) => {
         <StatusBar style="light" />
         <View style={styles.container}>
           <Image source={logo} style={styles.logo} />
-          <Text style={styles.appName}>Chat Room</Text>
+          <Text style={styles.appName}>United Humanity</Text>
           <Text style={styles.heading}>Sign in to your account</Text>
           <View style={styles.inputBox}>
             <TextInput
@@ -151,7 +151,7 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.box}>
             <Text
               onPress={() => navigation.navigate("ForgetPsw")}
-              style={[styles.txt, { color: "#009c55", fontWeight: "600" }]}
+              style={[styles.txt, { color: "#01AEF0", fontWeight: "600" }]}
             >
               Forget Password?
             </Text>
@@ -160,7 +160,7 @@ const LoginScreen = ({ navigation }) => {
               onPress={() => navigation.navigate("singup")}
             >
               Create account?{" "}
-              <Text style={{ color: "#009c55", fontWeight: "600" }}>
+              <Text style={{ color: "#01AEF0", fontWeight: "600" }}>
                 Singup
               </Text>
             </Text>
@@ -180,7 +180,7 @@ const LoginScreen = ({ navigation }) => {
         <Modal transparent={true} animationType="fade" visible={loading}>
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <ActivityIndicator size={40} color="#009c55" />
+              <ActivityIndicator size={40} color="#01AEF0" />
             </View>
           </View>
         </Modal>
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: {
     top: 15,
-    left: 30,
+    left: 40,
     zIndex: 7,
     opacity: 0.6,
     fontSize: 20,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     top: -55,
-    right: 20,
+    right: 25,
     zIndex: 7,
     opacity: 0.6,
     fontSize: 20,
@@ -223,11 +223,12 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 16,
-    marginBottom: 30,
+    marginBottom: 40,
     fontWeight: "500",
   },
   appName: {
     fontSize: 24,
+    marginTop: 10,
     marginBottom: 60,
     fontWeight: "800",
   },
@@ -236,7 +237,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderRadius: 5,
     paddingVertical: 5,
-    backgroundColor: "#009c55",
+    backgroundColor: "#01AEF0",
   },
   centeredView: {
     flex: 1,
@@ -260,15 +261,15 @@ const styles = StyleSheet.create({
     elevation: 4,
     width: "100%",
     borderWidth: 1,
-    paddingLeft: 35,
-    borderRadius: 5,
-    shadowRadius: 3,
+    paddingLeft: 50,
+    borderRadius: 100,
+    shadowRadius: 8,
     marginBottom: 20,
     fontWeight: "600",
     shadowOpacity: 0.15,
     paddingVertical: 15,
+    borderColor: "#EBEEF2",
     shadowColor: "#470000",
-    borderColor: "gainsboro",
     backgroundColor: "white",
     shadowOffset: { width: 0, height: 3 },
   },
