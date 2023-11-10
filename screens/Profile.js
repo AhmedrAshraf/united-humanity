@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import { database } from "../firebase";
 import moment from "moment";
-import logo from "../assets/appLogo.png";
 import { Button } from "react-native-paper";
 import { doc, getDoc } from "firebase/firestore";
 import { FontAwesome, Feather, MaterialIcons } from "@expo/vector-icons";
@@ -98,11 +97,10 @@ const Profile = ({ navigation }) => {
         />
         <Text style={{ fontSize: 20, fontWeight: "600" }}>Profile</Text>
         <TouchableOpacity
-          style={styles.settingBut}
           activeOpacity={0.8}
           onPress={() => navigation.navigate("Setting", user)}
         >
-          <MaterialIcons name={"settings"} size={22} color="white" />
+          <MaterialIcons name={"settings"} size={26} color="#000" />
         </TouchableOpacity>
       </View>
 
@@ -182,24 +180,32 @@ export default Profile;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f1f2f5",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
   },
   header: {
     width: "100%",
-    marginBottom: 20,
-    paddingHorizontal: 15,
+    paddingBottom: 20,
     alignItems: "center",
     flexDirection: "row",
+    paddingHorizontal: 25,
+    shadowColor: "gainsboro",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    backgroundColor: "white",
     justifyContent: "space-between",
   },
   arrow: {
     fontSize: 30,
-    color: "#009c55",
+    color: "#000",
   },
   ProfileContainer: {
     width: "100%",
     paddingBottom: 50,
     paddingHorizontal: 15,
+    marginTop: 20,
     borderBottomWidth: 1,
     flexDirection: "row",
     borderBottomColor: "gainsboro",
@@ -228,14 +234,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginTop: -20,
     fontWeight: 500,
-  },
-  settingBut: {
-    width: 35,
-    height: 35,
-    borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#009c55",
   },
   editBut: {
     width: 120,

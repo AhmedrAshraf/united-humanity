@@ -52,9 +52,8 @@ const SettingScreen = ({ navigation }) => {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleLogout}
-          style={styles.logoutBut}
         >
-          <MaterialIcons name={"logout"} size={18} color="white" />
+          <MaterialIcons name={"logout"} size={26} color="#000" />
         </TouchableOpacity>
       </View>
 
@@ -117,10 +116,15 @@ const styles = StyleSheet.create({
   },
   header: {
     width: "100%",
-    marginBottom: 20,
-    paddingHorizontal: 15,
+    paddingBottom: 20,
     alignItems: "center",
     flexDirection: "row",
+    paddingHorizontal: 25,
+    shadowColor: "gainsboro",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    backgroundColor: "white",
     justifyContent: "space-between",
   },
   logo: {
@@ -139,7 +143,7 @@ const styles = StyleSheet.create({
   },
   arrow: {
     fontSize: 30,
-    color: "#009c55",
+    color: "#000",
   },
   SettingContainer: {
     width: "100%",
@@ -147,6 +151,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     alignContent: "center",
     borderBottomColor: "gainsboro",
+    marginTop: 20
   },
   previewImg: {
     width: 90,
@@ -220,14 +225,6 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width,
     paddingHorizontal: "5%",
     marginTop: 5,
-  },
-  logoutBut: {
-    width: 35,
-    height: 35,
-    borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#009c55",
   },
   but: {
     bottom: 50,

@@ -158,10 +158,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     justifyContent: "space-between",
   },
-  logo: {
-    width: 60,
-    height: 60,
-  },
   post: {
     marginTop: 25,
     padding: 10,

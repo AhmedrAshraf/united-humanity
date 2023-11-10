@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import moment from "moment";
 import { database } from "../firebase";
-import logo from "../assets/appLogo.png";
 import { UserContext } from "../utils/UserContext";
 import { Image as OptimizedImage } from "expo-image";
 import Icon from "@expo/vector-icons/MaterialCommunityIcons";
@@ -22,16 +21,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { query, where, collection, onSnapshot } from "firebase/firestore";
 
 const ChatScreen = ({ navigation }) => {
-  const { uid, setUid } = useContext(UserContext);
+  const { user, uid, setUid } = useContext(UserContext);
 
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
 
-  const handleLogout = () => {
-    AsyncStorage.removeItem("uid");
-    setUid(null);
-  };
+
+  const uri =
+    user?.profilePic ||
+    "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   useEffect(() => {
     getActiveChats();
@@ -61,14 +60,18 @@ const ChatScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Image source={logo} style={styles.logo} />
-        <Text style={{ fontSize: 20, fontWeight: 600 }}>Chat Room</Text>
         <TouchableOpacity
-          style={styles.but}
           activeOpacity={0.8}
-          onPress={handleLogout}
+          onPress={() => navigation.navigate("Profile", user)}
         >
-          <MaterialIcons name={"logout"} size={18} color="white" />
+          <Image style={styles.profilePic} source={{ uri }} />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 20, fontWeight: 600 }}>Chat</Text>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate("Setting", user)}
+        >
+          <MaterialIcons name={"settings"} size={26} color="#000" />
         </TouchableOpacity>
       </View>
       <View style={styles.searchContainer}>
@@ -167,14 +170,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   header: {
-    width: "95%",
+    width: "100%",
+    paddingBottom: 20,
     alignItems: "center",
     flexDirection: "row",
+    paddingHorizontal: 25,
+    shadowColor: "gainsboro",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    backgroundColor: "white",
     justifyContent: "space-between",
   },
-  logo: {
-    width: 60,
-    height: 60,
+  profilePic: {
+    width: 40,
+    height: 40,
+    borderRadius: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "gainsboro",
   },
   row: {
     width: "90%",
@@ -232,6 +246,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 20
   },
   searchInput: {
     margin: 3,
