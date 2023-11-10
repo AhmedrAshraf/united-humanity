@@ -73,11 +73,10 @@ const Home = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={{ fontSize: 20, fontWeight: 600 }}>Home</Text>
         <TouchableOpacity
-          style={styles.but}
           activeOpacity={0.8}
           onPress={() => navigation.navigate("Setting", user)}
         >
-          <MaterialIcons name={"settings"} size={22} color="white" />
+          <MaterialIcons name={"settings"} size={26} color="#000" />
         </TouchableOpacity>
       </View>
       <ScrollView
@@ -144,14 +143,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#ffffff",
-  },
-  but: {
-    width: 35,
-    height: 35,
-    borderRadius: 50,
-    alignItems: "center",
-    backgroundColor: "#009c55",
-    justifyContent: "center",
   },
   header: {
     width: "100%",

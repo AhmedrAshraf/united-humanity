@@ -51,7 +51,7 @@ export const TabStack = () => {
         component={Home}
         options={{
           tabBarIcon: () => (
-            <MaterialIcons size={25} name="home" color="#009c55" />
+            <MaterialIcons size={26} name="home" color="#000" />
           ),
         }}
       />
@@ -61,7 +61,7 @@ export const TabStack = () => {
         options={{
           tabBarIcon: ({ focused }) => {
             let ico = focused ? "chat" : "chat-bubble-outline";
-            return <MaterialIcons size={25} color="#009c55" name={ico} />;
+            return <MaterialIcons size={26} color="#000" name={ico} />;
           },
         }}
       />
@@ -70,7 +70,7 @@ export const TabStack = () => {
         component={SeachScreen}
         options={{
           tabBarIcon: () => (
-            <MaterialIcons size={25} name="search" color="#009c55" />
+            <MaterialIcons size={26} name="search" color="#000" />
           ),
         }}
       />
@@ -78,9 +78,10 @@ export const TabStack = () => {
         name="Profile"
         component={Profile}
         options={{
-          tabBarIcon: () => (
-            <MaterialIcons size={25} name="person" color="#009c55" />
-          ),
+          tabBarIcon: ({ focused }) => {
+            let ico = focused ? "person" : "person-outline";
+            return <MaterialIcons size={26} color="#000" name={ico} />;
+          },
         }}
       />
     </Tab.Navigator>
