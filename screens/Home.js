@@ -43,11 +43,22 @@ const Home = ({ navigation }) => {
       collection(database, "posts"),
       orderBy("createdAt", "desc")
     );
-    getDocs(q).then((snap) => {
-      let list = snap.docs.map((e) => e.data());
-      const filteredPosts = list.filter((post) => post.userId !== user.uid);
-      setPosts(filteredPosts);
+
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const postsArray = snap.docs.map((doc) => {
+        const postData = doc.data();
+        const creatorPic =
+          postData.creatorPic || "https://default-profile-pic-url.com";
+        return {
+          ...postData,
+          id: doc.id,
+          creatorName: postData.creatorName,
+          creatorPic: creatorPic,
+        };
+      });
+      setPosts(postsArray);
     });
+    return unsubscribe;
   };
 
   function getRelativeTime(createdAt) {

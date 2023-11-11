@@ -71,7 +71,7 @@ const AddPostScreen = ({ navigation }) => {
       await uploadBytes(storeRef, blob);
       const url = await getDownloadURL(storeRef);
       setImage((prevImages) => [...prevImages, url]);
-        setLoading(false);
+      setLoading(false);
       console.log("🚀 ~ file: AddPostScreen.js:72 ~ .then ~ url:", url);
     } catch (err) {
       alert(err);
@@ -87,21 +87,19 @@ const AddPostScreen = ({ navigation }) => {
 
     try {
       const postCollection = collection(database, "posts");
-      for (let i = 0; i < image.length; i++) {
         const post = {
           title,
           creatorName: user.name || null,
           username: user.username || null,
-          imageUrl: image[i] || null,
+          imageUrl: image || null,
           userId: uid,
           creatorPic: user.profilePic || null,
           createdAt: new Date(),
         };
 
         await addDoc(postCollection, post);
-      }
       setTitle("");
-      setImage([null]);
+      setImage([]);
       setIsImageSelected(false);
       navigation.goBack();
     } catch (error) {
