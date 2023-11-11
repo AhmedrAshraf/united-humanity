@@ -2,10 +2,12 @@ import {
   Text,
   View,
   Image,
+  Modal,
   TextInput,
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { database, storage } from "../firebase";
 import * as ImagePicker from "expo-image-picker";
@@ -58,6 +60,7 @@ const AddPostScreen = ({ navigation }) => {
   const handleUpload = async (img) => {
     try {
       console.log("🚀 ~ file: AddPostScreen.js:63 ~ handleUpload ~ img:", img)
+      setLoading(true)
       let res = await fetch(img);
       let blob = await res.blob();
       console.log("🚀 ~ file: AddPostScreen.js:66 ~ handleUpload ~ blob:", blob)
@@ -153,6 +156,13 @@ const AddPostScreen = ({ navigation }) => {
           <MaterialIcons name="add-a-photo" size={22} color="white" />
         </TouchableOpacity>
       </View>
+      <Modal transparent={true} animationType="fade" visible={loading}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <ActivityIndicator size={40} color="#01AEF0" />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -227,5 +237,22 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignSelf: "center",
     backgroundColor: "#f1f2f5",
+  },
+  centeredView: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(100, 100, 100, .5)",
+  },
+  modalView: {
+    padding: 30,
+    elevation: 5,
+    shadowRadius: 4,
+    borderRadius: 10,
+    shadowOpacity: 0.25,
+    shadowColor: "#000",
+    alignItems: "center",
+    backgroundColor: "white",
+    shadowOffset: { width: 0, height: 2 },
   },
 });
