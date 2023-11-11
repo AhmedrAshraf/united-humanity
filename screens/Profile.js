@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { database } from "../firebase";
 import moment from "moment";
+import Swiper from "react-native-swiper";
 import { Button } from "react-native-paper";
 import { doc, getDoc } from "firebase/firestore";
 import { FontAwesome, Feather, MaterialIcons } from "@expo/vector-icons";
@@ -116,7 +117,9 @@ const Profile = ({ navigation }) => {
               alignItems: "flex-start",
               justifyContent: "center",
             }}>
-            <Text style={styles.userName}>{user?.username || "Loading..."}</Text>
+            <Text style={styles.userName}>
+              {user?.username || "Loading..."}
+            </Text>
             <Button
               mode="contained"
               uppercase={false}
@@ -129,36 +132,38 @@ const Profile = ({ navigation }) => {
 
         {posts.map((post, idx) => (
           <View style={styles.post} key={idx}>
-            <View activeOpacity={0.9} style={styles.postContent}>
-              <View style={{ flexDirection: "row" }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Image
                   style={styles.creatorPic}
                   source={{ uri: post?.creatorPic || cpi }}
                 />
+              <View style={{ marginLeft: 10 }}>
                 <Text style={styles.creatorName}>
-                  {post?.creatorName || "Loading..."}
+                  {post?.username || post?.creatorName}
                 </Text>
-              </View>
-              <View>
                 <Text style={styles.postTime}>
-                  {post.createdAt
-                    ? getRelativeTime(post.createdAt.toDate())
-                    : "Loading..."}
+                  {post.createdAt && getRelativeTime(post?.createdAt?.toDate())}
                 </Text>
-              </View>
-              <View style={{ marginTop: 20 }}>
-                {post.imageUrl && (
-                  <Image
-                    source={{ uri: post.imageUrl }}
-                    style={styles.postImage}
-                  />
-                )}
-              </View>
-              <View style={{ marginTop: 20, flexDirection: "row" }}>
-                <Text style={{ fontSize: 18, fontWeight: 600 }}>{post.username || post.creatorName} </Text>
-                <Text style={{ fontSize: 18}}>{post.title}</Text>
               </View>
             </View>
+            <Swiper
+              containerStyle={styles.swiperContainer}
+              activeDotColor="white"
+              showsButtons={false}
+              dotColor="silver"
+              autoplay={true}>
+              {Array.isArray(post?.imageUrl) &&
+                post?.imageUrl?.map((url, index) => (
+                  <Image
+                    key={index}
+                    source={{ uri: url }}
+                    style={styles.postImage}
+                  />
+                ))}
+            </Swiper>
+            <Text style={{ fontSize: 16, marginLeft: 10, fontWeight: "600" }}>
+              {post.title}
+            </Text>
           </View>
         ))}
         <View style={styles.addButtonContainer}>
@@ -241,45 +246,44 @@ const styles = StyleSheet.create({
     backgroundColor: "#01AEF0",
   },
   post: {
-    width: "95%",
-    padding: 5,
-    marginVertical: 10,
-    borderRadius: 10,
+    marginTop: 25,
+    padding: 10,
     paddingVertical: 10,
-    alignItems: "center",
-    flexDirection: "row",
-    marginHorizontal: 10,
+    width: "92%",
+    marginHorizontal: "4%",
+    shadowColor: "gainsboro",
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    borderRadius: 10,
     backgroundColor: "#fff",
     justifyContent: "space-between",
   },
-  postContent: {
-    width: "100%",
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    flexDirection: "colun",
-  },
   creatorPic: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
+    marginLeft: 10,
     borderRadius: 120,
-    alignItems: "center",
-    justifyContent: "center",
     backgroundColor: "gainsboro",
   },
   creatorName: {
     fontSize: 18,
-    marginLeft: 10,
     fontWeight: "600",
   },
   postTime: {
-    fontSize: 18,
-    marginLeft: 60,
-    marginTop: -20,
+    fontSize: 14,
     color: "gray",
   },
   postImage: {
-    height: 400,
+    height: 340,
+    width: "95%",
+    borderRadius: 5,
+    marginVertical: 10,
+    alignSelf: "center",
+    backgroundColor: "#f1f2f5",
+  },
+  swiperContainer: {
+    height: 360,
     width: "100%",
-    resizeMode: 'contain',
   },
 });
