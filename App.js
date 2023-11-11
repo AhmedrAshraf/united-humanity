@@ -12,6 +12,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import ProfileDetailScreen from "./screens/ProfileDetailScreen";
 import UserProvider, { UserContext } from "./utils/UserContext";
 import { View, ActivityIndicator, Vibration } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -93,6 +94,7 @@ export const DrawerStack = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="TabStack" component={TabStack} />
       <Stack.Screen name="SelectedChatScreen" component={MessageSceen} />
+      <Stack.Screen name="ProfileDetailScreen" component={ProfileDetailScreen} />
       <Stack.Screen name="AddPostScreen" component={AddPostScreen} />
       <Stack.Screen name="Setting" component={Setting} />
     </Stack.Navigator>

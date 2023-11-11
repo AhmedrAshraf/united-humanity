@@ -9,12 +9,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getStorage } from "@firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCdlLC7xhlP4krcfEguUjDMcadlo6g_C4E",
-  authDomain: "united-app-a0cdb.firebaseapp.com",
-  projectId: "united-app-a0cdb",
-  storageBucket: "united-app-a0cdb.appspot.com",
-  messagingSenderId: "508958772432",
-  appId: "1:508958772432:web:c5a3aa688b95b13c87e2d5"
+  apiKey: "AIzaSyCe57OrzhDdCh5IjnoxAy1OOUnPjWidAVs",
+  authDomain: "unit-2cf16.firebaseapp.com",
+  projectId: "unit-2cf16",
+  storageBucket: "unit-2cf16.appspot.com",
+  messagingSenderId: "56494050271",
+  appId: "1:56494050271:web:76e2771640fe7d5615526a"
 };
 
 const app = initializeApp(firebaseConfig);

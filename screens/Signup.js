@@ -93,13 +93,15 @@ const CreateAdminScreen = ({ navigation }) => {
               email,
               name,
               username,
+              profilePic: '',
               token: pushToken || "",
             });
             setName("");
             setEmail("");
             setPassword("");
             setLoading(false);
-            alert("Admin Successfully Registered!");
+            navigation.navigate("ProfileDetailScreen", { uid: userInfo.user.uid });
+            console.log("Admin Successfully Registered!");
           } else {
             setLoading(false);
             alert("User not created");
