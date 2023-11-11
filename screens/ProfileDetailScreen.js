@@ -3,6 +3,7 @@ import {
   Text,
   View,
   Image,
+  Alert,
   TextInput,
   StyleSheet,
   Dimensions,
@@ -15,6 +16,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { launchCameraAsync, launchImageLibraryAsync } from 'expo-image-picker';
 
 const ProfileDetailScreen = ({ route, navigation }) => {
   const { uid } = route.params;
@@ -58,16 +60,38 @@ const ProfileDetailScreen = ({ route, navigation }) => {
     if (!hasPermission) {
       return;
     }
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-    if (!result.canceled) {
-      setIsImageSelected(true);
-      handleUpload(result.assets[0].uri);
-    }
+
+    Alert.alert(
+      'Choose Image Source',
+      'Select the source for your image',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Camera',
+          onPress: async () => {
+            const cameraResult = await launchCameraAsync();
+            if (cameraResult) {
+              setIsImageSelected(true);
+              handleUpload(cameraResult.assets[0].uri);
+            }
+          },
+        },
+        {
+          text: 'Gallery',
+          onPress: async () => {
+            const galleryResult = await launchImageLibraryAsync();
+            if (galleryResult) {
+              setIsImageSelected(true);
+              handleUpload(galleryResult.assets[0].uri);
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const handleUpload = async (img) => {
