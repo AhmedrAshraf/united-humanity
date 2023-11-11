@@ -2,12 +2,14 @@ import {
   Text,
   View,
   Image,
+  Modal,
   StyleSheet,
   Dimensions,
   ScrollView,
   SafeAreaView,
   RefreshControl,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import moment from "moment";
 import { database } from "../firebase";
@@ -26,6 +28,7 @@ import Swiper from "react-native-swiper";
 const Home = ({ navigation }) => {
   const { user } = useContext(UserContext);
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState([])
 
   const uri =
     user?.profilePic ||
@@ -143,6 +146,13 @@ const Home = ({ navigation }) => {
           <FontAwesome name="plus" size={20} color="white" />
         </TouchableOpacity>
       </View>
+      <Modal transparent={true} animationType="fade" visible={loading}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <ActivityIndicator size={40} color="#01AEF0" />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -298,5 +308,22 @@ const styles = StyleSheet.create({
   swiperContainer: {
     height: 360,
     width: "100%",
+  },
+  centeredView: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(100, 100, 100, .5)",
+  },
+  modalView: {
+    padding: 30,
+    elevation: 5,
+    shadowRadius: 4,
+    borderRadius: 10,
+    shadowOpacity: 0.25,
+    shadowColor: "#000",
+    alignItems: "center",
+    backgroundColor: "white",
+    shadowOffset: { width: 0, height: 2 },
   },
 });
