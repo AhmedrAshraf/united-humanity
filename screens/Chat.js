@@ -29,13 +29,14 @@ const ChatScreen = ({ navigation }) => {
 
 
   const uri =
-    user?.profilePic ||
+    user.profilePic ||
     "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   useEffect(() => {
     getActiveChats();
   }, []);
 
+  console.log(users)
   const getActiveChats = () => {
     const q = query(
       collection(database, "users"),
@@ -109,9 +110,7 @@ const ChatScreen = ({ navigation }) => {
                     <OptimizedImage
                       contentFit="cover"
                       style={styles.image}
-                      source={{
-                        uri: "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png",
-                      }}
+                      source={{ uri: users.profilePic }}
                     />
                   </View>
                   <View>

@@ -30,7 +30,8 @@ const Chat = ({ route, navigation }) => {
   const [messages, setMessages] = useState([]);
   const [wordLists, setWordLists] = useState(["bad", "lier", "wrong"]);
 
-  const image =
+  const uri =
+    user.profilePic ||
     "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   useFocusEffect(
@@ -46,7 +47,7 @@ const Chat = ({ route, navigation }) => {
         let list = snap.docs.map((doc) => ({
           ...doc.data(),
           createdAt: doc.data()?.createdAt.toDate(),
-          user: { ...doc.data()?.user, avatar: image },
+          user: { ...doc.data()?.user, avatar: uri },
         }));
         readMsg();
         list = list.sort((a, b) => b.createdAt - a.createdAt);
@@ -145,7 +146,7 @@ const Chat = ({ route, navigation }) => {
           onPress={() => navigation.navigate("Setting", user)}
         >
           <Image
-            source={{ uri: image }}
+            source={{ uri }}
             style={{
               width: 40,
               height: 40,
@@ -190,7 +191,7 @@ const Chat = ({ route, navigation }) => {
             </View>
           </View>
         )}
-        user={{ _id: uid, avatar: image }}
+        user={{ _id: uid, avatar: uri }}
       />
     </SafeAreaView>
   );
