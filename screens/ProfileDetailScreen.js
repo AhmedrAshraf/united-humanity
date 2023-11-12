@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   Text,
   View,
@@ -17,11 +17,13 @@ import { Feather, MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { launchCameraAsync, launchImageLibraryAsync } from 'expo-image-picker';
+import { UserContext } from "../utils/UserContext";
 
 const ProfileDetailScreen = ({ route, navigation }) => {
+  const { user, setUser } = useContext(UserContext);
   const { uid } = route.params;
 
-  const [user, setUser] = useState();
+  const [users, setUsers] = useState();
   const [image, setImage] = useState();
   const [loading, setLoading] = useState(false);
   const [isImageSelected, setIsImageSelected] = useState(false);
@@ -34,7 +36,7 @@ const ProfileDetailScreen = ({ route, navigation }) => {
 
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
-          setUser(userData);
+          setUsers(userData);
         } else {
           console.log("User document does not exist");
         }
@@ -44,7 +46,7 @@ const ProfileDetailScreen = ({ route, navigation }) => {
     };
 
     fetchUserData();
-  }, [uid, setUser]);
+  }, [uid, setUsers]);
 
   const getMediaLibraryPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -116,7 +118,7 @@ const ProfileDetailScreen = ({ route, navigation }) => {
   };
 
   const handleUsernameChange = (newUsername) => {
-    setUser((prevUser) => ({ ...prevUser, username: newUsername }));
+    setUsers((prevUser) => ({ ...prevUser, username: newUsername }));
   };
 
   const saveChanges = async () => {
@@ -132,6 +134,7 @@ const ProfileDetailScreen = ({ route, navigation }) => {
 
       setLoading(false);
       alert("Changes saved successfully!");
+      setUser((prevUser) => ({ ...prevUser, username: user.username, profilePic: image }));
       navigation.navigate("Home");
     } catch (err) {
       alert(err);
@@ -171,7 +174,7 @@ const ProfileDetailScreen = ({ route, navigation }) => {
             style={styles.input}
             placeholder="Username"
             placeholderTextColor="gray"
-            value={user?.username || "----------"}
+            value={users?.username || "----------"}
             onChangeText={handleUsernameChange}
           />
         </View>

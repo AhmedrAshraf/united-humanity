@@ -96,11 +96,11 @@ const CreateAdminScreen = ({ navigation }) => {
               profilePic: '',
               token: pushToken || "",
             });
+            navigation.navigate("ProfileDetailScreen", { uid: userInfo.user.uid });
             setName("");
             setEmail("");
             setPassword("");
             setLoading(false);
-            navigation.navigate("ProfileDetailScreen", { uid: userInfo.user.uid });
             console.log("Admin Successfully Registered!");
           } else {
             setLoading(false);
