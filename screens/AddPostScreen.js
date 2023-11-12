@@ -18,8 +18,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
 import Swiper from "react-native-swiper";
-import { launchCameraAsync, launchImageLibraryAsync } from 'expo-image-picker';
-
+import { launchCameraAsync, launchImageLibraryAsync } from "expo-image-picker";
 
 const AddPostScreen = ({ navigation }) => {
   const { uid, user } = useContext(UserContext);
@@ -28,6 +27,7 @@ const AddPostScreen = ({ navigation }) => {
   const [image, setImage] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isImageSelected, setIsImageSelected] = useState(false);
+  const [isImagePickerVisible, setImagePickerVisible] = useState(false);
 
   const uri =
     user?.profilePic ||
@@ -42,42 +42,30 @@ const AddPostScreen = ({ navigation }) => {
     return true;
   };
 
-  const pickImage = async () => {
+  const pickImage = () => {
+    setImagePickerVisible(true);
+  };
+  const handleOverlayPress = () => {
+    setImagePickerVisible(false);
+  };
+  const handleModalOption = async (option) => {
+    setImagePickerVisible(false);
+
     const hasPermission = await getMediaLibraryPermission();
     if (!hasPermission) {
       return;
     }
-    Alert.alert(
-      'Choose Image Source',
-      'Select the source for your image',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Camera',
-          onPress: async () => {
-            const cameraResult = await launchCameraAsync();
-            if (cameraResult) {
-              setIsImageSelected(true);
-              handleUpload(cameraResult.assets[0].uri);
-            }
-          },
-        },
-        {
-          text: 'Gallery',
-          onPress: async () => {
-            const galleryResult = await launchImageLibraryAsync();
-            if (galleryResult) {
-              setIsImageSelected(true);
-              handleUpload(galleryResult.assets[0].uri);
-            }
-          },
-        },
-      ],
-      { cancelable: false }
-    );
+
+    let result;
+    if (option === "camera") {
+      result = await launchCameraAsync();
+    } else if (option === "gallery") {
+      result = await launchImageLibraryAsync();
+    }
+    if (result) {
+      setIsImageSelected(true);
+      handleUpload(result.assets[0].uri);
+    }
   };
 
   const handleUpload = async (img) => {
@@ -173,6 +161,28 @@ const AddPostScreen = ({ navigation }) => {
         ))}
       </Swiper>
       <View style={styles.addButtonContainer}>
+        <Modal
+          transparent={true}
+          animationType="fade"
+          visible={isImagePickerVisible}>
+          <TouchableOpacity
+            style={styles.imgOptionModal}
+            activeOpacity={1}
+            onPress={handleOverlayPress}>
+            <View style={styles.modalOptionContainer}>
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() => handleModalOption("camera")}>
+                <Text style={styles.modalOptionText}>Camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() => handleModalOption("gallery")}>
+               <Text style={styles.modalOptionText}>Gallery</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
         <TouchableOpacity style={styles.addButton} onPress={pickImage}>
           <MaterialIcons name="add-a-photo" size={22} color="white" />
         </TouchableOpacity>
@@ -275,5 +285,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "white",
     shadowOffset: { width: 0, height: 2 },
+  },
+  imgOptionModal: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 120,
+  },
+  modalOptionContainer: {
+    width: "80%",
+    padding: 5,
+    elevation: 5,
+    shadowRadius: 4,
+    borderRadius: 10,
+    shadowOpacity: 0.25,
+    shadowColor: "#000",
+    alignItems: "center",
+    backgroundColor: "white",
+    shadowOffset: { width: 0, height: 2 },
+  },
+  modalOption: {
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 2,
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 10,
+    borderColor: "gainsboro",
+  },
+  modalOptionText: {
+    fontSize: 16,
   },
 });
