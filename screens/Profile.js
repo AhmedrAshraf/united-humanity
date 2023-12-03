@@ -1,68 +1,42 @@
+import React, { useContext, useEffect, useState } from "react";
 import {
   Text,
   View,
   Image,
-  TextInput,
   StyleSheet,
   ScrollView,
-  Dimensions,
   SafeAreaView,
   RefreshControl,
   TouchableOpacity,
 } from "react-native";
+import { FontAwesome, Feather, MaterialIcons } from "@expo/vector-icons";
+import { Button } from "react-native-paper";
 import { database } from "../firebase";
+import { doc, getDoc, query, collection, onSnapshot, orderBy, where } from "firebase/firestore";
 import moment from "moment";
 import Swiper from "react-native-swiper";
-import { Button } from "react-native-paper";
-import { doc, getDoc } from "firebase/firestore";
-import { FontAwesome, Feather, MaterialIcons } from "@expo/vector-icons";
 import { UserContext } from "../utils/UserContext";
-import React, { useContext, useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  query,
-  collection,
-  onSnapshot,
-  orderBy,
-  where,
-} from "firebase/firestore";
 
 const Profile = ({ navigation }) => {
   const { uid, setUid } = useContext(UserContext);
-
   const [user, setUser] = useState();
   const [posts, setPosts] = useState([]);
 
-  function getRelativeTime(createdAt) {
-    const now = moment();
-    const postTime = moment(createdAt);
-    const diff = now.diff(postTime, "minutes");
-
-    if (diff < 60) return `${diff} min ago`;
-    if (diff < 60 * 24) return `${Math.floor(diff / 60)} hr ago`;
-    if (diff < 60 * 24 * 30) return `${Math.floor(diff / (60 * 24))} d ago`;
-    if (diff < 60 * 24 * 30 * 12)
-      return `${Math.floor(diff / (60 * 24 * 30))} mo ago`;
-    return `${Math.floor(diff / (60 * 24 * 30 * 12))} yr ago`;
-  }
-
   useEffect(() => {
     getUser();
-  }, []);
-
-  const getUser = () => {
-    getDoc(doc(database, "users", uid)).then((docData) => {
-      setUser(docData.data());
-    });
-  };
-
-  const uri =
-    user?.profilePic ||
-    "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
-
-  useEffect(() => {
     getPosts();
   }, []);
+
+  const getUser = async () => {
+    try {
+      const docData = await getDoc(doc(database, "users", uid));
+      setUser(docData.data());
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  const uri = user?.profilePic || "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   const getPosts = () => {
     const q = query(
@@ -74,18 +48,30 @@ const Profile = ({ navigation }) => {
     const unsubscribe = onSnapshot(q, (snap) => {
       const postsArray = snap.docs.map((doc) => {
         const postData = doc.data();
-        const creatorPic =
-          postData.creatorPic || "https://default-profile-pic-url.com";
+        const creatorPic = postData.creatorPic || "https://default-profile-pic-url.com";
         return {
           ...postData,
           id: doc.id,
           creatorName: postData.creatorName,
-          creatorPic: creatorPic,
+          creatorPic,
         };
       });
       setPosts(postsArray);
     });
+
     return unsubscribe;
+  };
+
+  const getRelativeTime = (createdAt) => {
+    const now = moment();
+    const postTime = moment(createdAt);
+    const diff = now.diff(postTime, "minutes");
+
+    if (diff < 60) return `${diff} min ago`;
+    if (diff < 60 * 24) return `${Math.floor(diff / 60)} hr ago`;
+    if (diff < 60 * 24 * 30) return `${Math.floor(diff / (60 * 24))} d ago`;
+    if (diff < 60 * 24 * 30 * 12) return `${Math.floor(diff / (60 * 24 * 30))} mo ago`;
+    return `${Math.floor(diff / (60 * 24 * 30 * 12))} yr ago`;
   };
 
   return (
@@ -106,25 +92,19 @@ const Profile = ({ navigation }) => {
       </View>
 
       <ScrollView refreshControl={<RefreshControl onRefresh={getPosts} />}>
-        <View style={styles.ProfileContainer}>
+        <View style={styles.profileContainer}>
           <View activeOpacity={0.9} style={styles.contentContainer}>
             <Image style={styles.previewImg} source={{ uri }} />
           </View>
           <Text style={styles.name}>{user?.name || "Loading..."}</Text>
-          <View
-            style={{
-              flexDirection: "column",
-              alignItems: "flex-start",
-              justifyContent: "center",
-            }}>
-            <Text style={styles.userName}>
-              {user?.username || "Loading..."}
-            </Text>
+          <View style={styles.userInfoContainer}>
+            <Text style={styles.userName}>{user?.username || "Loading..."}</Text>
             <Button
               mode="contained"
               uppercase={false}
-              style={styles.editBut}
-              onPress={() => navigation.navigate("Setting", user)}>
+              style={styles.editButton}
+              onPress={() => navigation.navigate("Setting", user)}
+            >
               Edit Profile
             </Button>
           </View>
@@ -132,12 +112,9 @@ const Profile = ({ navigation }) => {
 
         {posts.map((post, idx) => (
           <View style={styles.post} key={idx}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Image
-                  style={styles.creatorPic}
-                  source={{ uri: post?.creatorPic || cpi }}
-                />
-              <View style={{ marginLeft: 10 }}>
+            <View style={styles.postHeader}>
+              <Image style={styles.creatorPic} source={{ uri }} />
+              <View style={styles.creatorInfo}>
                 <Text style={styles.creatorName}>
                   {post?.username || post?.creatorName}
                 </Text>
@@ -151,30 +128,24 @@ const Profile = ({ navigation }) => {
               activeDotColor="white"
               showsButtons={false}
               dotColor="silver"
-              autoplay={true}>
+              autoplay={true}
+            >
               {Array.isArray(post?.imageUrl) &&
                 post?.imageUrl?.map((url, index) => (
-                  <Image
-                    key={index}
-                    source={{ uri: url }}
-                    style={styles.postImage}
-                  />
+                  <Image key={index} source={{ uri: url }} style={styles.postImage} />
                 ))}
             </Swiper>
-            <Text style={{ fontSize: 16, marginLeft: 10, fontWeight: "600" }}>
-              {post.title}
-            </Text>
+            <Text style={styles.postTitle}>{post.title}</Text>
           </View>
         ))}
-        <View style={styles.addButtonContainer}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => {
-              navigation.navigate("AddPostScreen");
-            }}>
-            <FontAwesome name="plus" size={20} color="white" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            navigation.navigate("AddPostScreen");
+          }}
+        >
+          <FontAwesome name="plus" size={20} color="white" />
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -205,7 +176,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     color: "#000",
   },
-  ProfileContainer: {
+  profileContainer: {
     width: "100%",
     paddingBottom: 50,
     paddingHorizontal: 15,
@@ -234,12 +205,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
   },
+  userInfoContainer: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
   userName: {
     fontSize: 20,
     marginTop: -20,
-    fontWeight: 500,
+    fontWeight: "500",
   },
-  editBut: {
+  editButton: {
     width: 120,
     marginTop: 10,
     borderRadius: 10,
@@ -259,12 +235,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "space-between",
   },
+  postHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   creatorPic: {
     width: 40,
     height: 40,
     marginLeft: 10,
     borderRadius: 120,
     backgroundColor: "gainsboro",
+  },
+  creatorInfo: {
+    marginLeft: 10,
   },
   creatorName: {
     fontSize: 18,
@@ -285,5 +268,21 @@ const styles = StyleSheet.create({
   swiperContainer: {
     height: 360,
     width: "100%",
+  },
+  postTitle: {
+    fontSize: 16,
+    marginLeft: 10,
+    fontWeight: "600",
+  },
+  addButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#01AEF0",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
