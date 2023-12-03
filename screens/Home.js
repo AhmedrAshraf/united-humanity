@@ -108,6 +108,10 @@ const Home = ({ navigation }) => {
     return "Just now";
   }
 
+  const handleFollowerButtonClick = () => {
+    console.log('followed')
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -120,23 +124,39 @@ const Home = ({ navigation }) => {
         <Text style={{ fontSize: 20, fontWeight: "600" }}>Home</Text>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => navigation.navigate("ProfileDetailScreen", user)}
+          onPress={() =>
+            navigation.navigate("ProfileDetailScreen", user)
+          }
         >
           <MaterialIcons name="settings" size={26} color="#000" />
         </TouchableOpacity>
       </View>
       <ScrollView
         style={{ width: "100%" }}
-        refreshControl={<RefreshControl onRefresh={getPosts} refreshing={loading} />}
+        refreshControl={
+          <RefreshControl onRefresh={getPosts} refreshing={loading} />
+        }
       >
         {posts.map((post) => (
           <View style={styles.post} key={post.id}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Image style={styles.previewImg} source={{ uri: post.creatorPic || uri }} />
+              <Image
+                style={styles.previewImg}
+                source={{ uri: post.creatorPic || uri }}
+              />
               <View style={{ marginLeft: 10 }}>
                 <Text style={styles.name}>{post.creatorName}</Text>
-                <Text style={styles.postTime}>{post.createdAt && getRelativeTime(post.createdAt.toDate())}</Text>
+                <Text style={styles.postTime}>
+                  {post.createdAt &&
+                    getRelativeTime(post.createdAt.toDate())}
+                </Text>
               </View>
+              <TouchableOpacity
+                style={styles.followerButton}
+                onPress={handleFollowerButtonClick}
+              >
+                <Text style={styles.followerButtonText}>Follow</Text>
+              </TouchableOpacity>
             </View>
             <Swiper
               containerStyle={styles.swiperContainer}
@@ -147,10 +167,16 @@ const Home = ({ navigation }) => {
             >
               {Array.isArray(post.imageUrl) &&
                 post.imageUrl.map((url, index) => (
-                  <Image key={index} source={{ uri: url }} style={styles.postImage} />
+                  <Image
+                    key={index}
+                    source={{ uri: url }}
+                    style={styles.postImage}
+                  />
                 ))}
             </Swiper>
-            <Text style={{ fontSize: 16, marginLeft: 10, fontWeight: "600" }}>{post.title}</Text>
+            <Text style={{ fontSize: 16, marginLeft: 10, fontWeight: "600" }}>
+              {post.title}
+            </Text>
           </View>
         ))}
       </ScrollView>
@@ -269,5 +295,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "white",
     shadowOffset: { width: 0, height: 2 },
+  },
+  followerButton: {
+    backgroundColor: "#01AEF0",
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginLeft: "auto",
+    marginRight: 10,
+  },
+  followerButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });
