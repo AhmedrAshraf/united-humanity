@@ -21,6 +21,8 @@ const Profile = ({ navigation }) => {
   const { uid, setUid } = useContext(UserContext);
   const [user, setUser] = useState();
   const [posts, setPosts] = useState([]);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
     getUser();
@@ -30,7 +32,12 @@ const Profile = ({ navigation }) => {
   const getUser = async () => {
     try {
       const docData = await getDoc(doc(database, "users", uid));
-      setUser(docData.data());
+      const userData = docData.data();
+      setUser(userData);
+
+      // Count followers and following
+      setFollowersCount(userData.followers ? userData.followers.length : 0);
+      setFollowingCount(userData.following ? userData.following.length : 0);
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
@@ -96,9 +103,16 @@ const Profile = ({ navigation }) => {
           <View activeOpacity={0.9} style={styles.contentContainer}>
             <Image style={styles.previewImg} source={{ uri }} />
           </View>
-          <Text style={styles.name}>{user?.name || "Loading..."}</Text>
           <View style={styles.userInfoContainer}>
             <Text style={styles.userName}>{user?.username || "Loading..."}</Text>
+            <View>
+              <Text style={{fontWeight: 600}}>
+              Followers: {followersCount}
+              </Text>
+              <Text style={{fontWeight: 600}}>
+              Following: {followingCount}
+              </Text>
+            </View>
             <Button
               mode="contained"
               uppercase={false}

@@ -15,11 +15,15 @@ import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import moment from "moment";
 import {
   query,
+  arrayUnion,
   collection,
-  onSnapshot,
+  updateDoc,
+  arrayRemove,
   orderBy,
   getDocs,
   where,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import Swiper from "react-native-swiper";
 import { database } from "../firebase";
@@ -29,64 +33,91 @@ const Home = ({ navigation }) => {
   const { user } = useContext(UserContext);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [following, setFollowing] = useState([]);
+  const [limit, setLimit] = useState(10);
 
   const uri = user?.profilePic || "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   useEffect(() => {
-    getPosts();
-    getUsers();
-  }, [user]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
 
-  const getUsers = async () => {
+        if (!following.length && user?.uid) {
+          const userDocRef = doc(collection(database, "users"), user.uid);
+          const userDoc = await getDoc(userDocRef);
+          const updatedFollowing = (userDoc.data()?.following || []).map(String);
+          setFollowing(updatedFollowing);
+        }
+
+        const allPostsQuery = query(collection(database, "posts"), orderBy("createdAt", "desc"));
+        const followingPostsQuery = following.length > 0
+          ? query(collection(database, "posts"), where("userId", "in", following), orderBy("createdAt", "desc"))
+          : null;
+        const queryToUse = followingPostsQuery || allPostsQuery;
+
+        const snap = await getDocs(queryToUse);
+        const followingPosts = await Promise.all(snap.docs.map(async (doc) => await processPost(doc)));
+
+        const allPostsSnapshot = await getDocs(allPostsQuery);
+        const allPosts = await Promise.all(allPostsSnapshot.docs.map((doc) => processPost(doc)));
+
+        const uniquePostsSet = new Set(allPosts.map((post) => post.id));
+        const uniqueFollowingPosts = followingPosts.filter((post) => !uniquePostsSet.has(post.id));
+
+        setPosts(uniqueFollowingPosts.concat(allPosts).filter((post) => post.userId !== user?.uid));
+
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [user, following.length]);
+
+  const handleFollowerButtonClick = async (postUserId) => {
     try {
-      setLoading(true);
-      const querySnapshot = await getDocs(collection(database, "users"));
-      const allUsers = querySnapshot.docs.map((doc) => ({ ...doc.data(), uid: doc.id }));
-      const filteredUsers = allUsers.filter((u) => u.uid !== user?.uid);
+      const userDocRef = doc(collection(database, "users"), user?.uid);
+      const targetUserDocRef = doc(collection(database, "users"), postUserId);
+      const userDoc = await getDoc(userDocRef);
+      const currentUserData = userDoc.data();
+      const stringPostUserId = postUserId.toString();
+      const isFollowing = (currentUserData.following || []).includes(stringPostUserId);
 
-      setLoading(false);
+      if (isFollowing) {
+        await updateDoc(userDocRef, { following: arrayRemove(stringPostUserId) });
+        await updateDoc(targetUserDocRef, { followers: arrayRemove(user?.uid) });
+      } else {
+        await updateDoc(userDocRef, { following: arrayUnion(stringPostUserId) });
+        await updateDoc(targetUserDocRef, { followers: arrayUnion(user?.uid) });
+      }
+
+      setFollowing((prevFollowing) => isFollowing ? prevFollowing.filter((id) => id !== stringPostUserId) : [...prevFollowing, stringPostUserId]);
     } catch (error) {
-      setLoading(false);
-      console.error("Error fetching users:", error);
+      console.error("Error updating following:", error);
     }
   };
 
-  const getPosts = () => {
-    const q = query(collection(database, "posts"), orderBy("createdAt", "desc"));
-  
-    const unsubscribe = onSnapshot(q, async (snap) => {
-      try {
-        const postsArray = await Promise.all(
-          snap.docs.map(async (doc) => {
-            const postData = doc.data();
-            const userId = postData.userId;
-            const userQuerySnapshot = await getDocs(
-              query(collection(database, "users"), where("uid", "==", userId))
-            );
-  
-            const userData = userQuerySnapshot.docs[0]?.data();
-            const creatorPic = userData?.profilePic || "https://default-profile-pic-url.com";
-  
-            return {
-              ...postData,
-              id: doc.id,
-              creatorName: postData.creatorName || userData?.username,
-              creatorPic,
-            };
-          })
-        );
-  
-        const filteredPosts = postsArray.filter((post) => post && post.creatorName);
-        setPosts(filteredPosts);
-      } catch (error) {
-        console.error("Error processing post data:", error);
-      }
-    });
-  
-    return unsubscribe;
+  const processPost = async (doc) => {
+    try {
+      const postData = doc.data();
+      const userData = (await getDocs(query(collection(database, "users"), where("uid", "==", postData.userId))))?.docs[0]?.data() || {};
+
+      return {
+        ...postData,
+        id: doc.id,
+        creatorName: postData.creatorName || userData?.username,
+        creatorPic: userData?.profilePic || "https://default-profile-pic-url.com",
+      };
+    } catch (error) {
+      console.error("Error processing post data:", error);
+      return null;
+    }
   };
 
-  function getRelativeTime(createdAt) {
+  const getRelativeTime = (createdAt) => {
     const now = moment();
     const postTime = moment(createdAt);
     const diff = now.diff(postTime, "minutes");
@@ -106,85 +137,52 @@ const Home = ({ navigation }) => {
     }
 
     return "Just now";
-  }
-
-  const handleFollowerButtonClick = () => {
-    console.log('followed')
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate("Profile", user)}
-        >
+        <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate("Profile", user)}>
           <Image style={styles.profilePic} source={{ uri }} />
         </TouchableOpacity>
         <Text style={{ fontSize: 20, fontWeight: "600" }}>Home</Text>
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() =>
-            navigation.navigate("ProfileDetailScreen", user)
-          }
-        >
+        <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate("ProfileDetailScreen", user)}>
           <MaterialIcons name="settings" size={26} color="#000" />
         </TouchableOpacity>
       </View>
-      <ScrollView
-        style={{ width: "100%" }}
-        refreshControl={
-          <RefreshControl onRefresh={getPosts} refreshing={loading} />
-        }
-      >
+      <ScrollView style={{ width: "100%" }} refreshControl={<RefreshControl refreshing={loading} />}>
         {posts.map((post) => (
           <View style={styles.post} key={post.id}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Image
-                style={styles.previewImg}
-                source={{ uri: post.creatorPic || uri }}
-              />
+              <Image style={styles.previewImg} source={{ uri: post.creatorPic || uri }} />
               <View style={{ marginLeft: 10 }}>
                 <Text style={styles.name}>{post.creatorName}</Text>
-                <Text style={styles.postTime}>
-                  {post.createdAt &&
-                    getRelativeTime(post.createdAt.toDate())}
-                </Text>
+                <Text style={styles.postTime}>{post.createdAt && getRelativeTime(post.createdAt.toDate())}</Text>
               </View>
               <TouchableOpacity
-                style={styles.followerButton}
-                onPress={handleFollowerButtonClick}
-              >
-                <Text style={styles.followerButtonText}>Follow</Text>
+                style={[
+                  styles.followerButton,
+                  {
+                    backgroundColor: following.includes(post.userId) ? "#000" : "#01AEF0",
+                  },
+                ]}
+                onPress={() => handleFollowerButtonClick(post.userId)}>
+                <Text style={styles.followerButtonText}>
+                  {following.includes(post.userId) ? "Following" : "Follow"}
+                </Text>
               </TouchableOpacity>
             </View>
-            <Swiper
-              containerStyle={styles.swiperContainer}
-              activeDotColor="white"
-              showsButtons={false}
-              dotColor="silver"
-              autoplay={true}
-            >
-              {Array.isArray(post.imageUrl) &&
-                post.imageUrl.map((url, index) => (
-                  <Image
-                    key={index}
-                    source={{ uri: url }}
-                    style={styles.postImage}
-                  />
-                ))}
+            <Swiper containerStyle={styles.swiperContainer} activeDotColor="white" showsButtons={false} dotColor="silver" autoplay={true}>
+              {Array.isArray(post.imageUrl) && post.imageUrl.map((url, index) => (
+                <Image key={index} source={{ uri: url }} style={styles.postImage} />
+              ))}
             </Swiper>
-            <Text style={{ fontSize: 16, marginLeft: 10, fontWeight: "600" }}>
-              {post.title}
-            </Text>
+            <Text style={{ fontSize: 16, marginLeft: 10, fontWeight: "600" }}>{post.title}</Text>
           </View>
         ))}
       </ScrollView>
       <View style={styles.addButtonContainer}>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("AddPostScreen")}
-        >
+        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("AddPostScreen")}>
           <FontAwesome name="plus" size={20} color="white" />
         </TouchableOpacity>
       </View>
