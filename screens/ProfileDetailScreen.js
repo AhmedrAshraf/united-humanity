@@ -58,9 +58,6 @@ const ProfileDetailScreen = ({ route, navigation }) => {
     return true;
   };
 
-  const pickImage = () => {
-    setImagePickerVisible(true);
-  };
   const handleOverlayPress = () => {
     setImagePickerVisible(false);
   };
@@ -147,7 +144,25 @@ const ProfileDetailScreen = ({ route, navigation }) => {
       <View style={styles.ProfileContainer}>
         <View activeOpacity={0.9} style={styles.content}>
           <Image style={styles.previewImg} source={{ uri: image }} />
-          <TouchableOpacity style={styles.editBox} onPress={pickImage}>
+          <TouchableOpacity
+            style={styles.editBox}
+            onPress={() => {
+              Alert.alert(
+                "Choose Image Source",
+                "Select the image source for your post",
+                [
+                  {
+                    text: "Camera",
+                    onPress: () => handleModalOption("camera"),
+                  },
+                  {
+                    text: "Gallery",
+                    onPress: () => handleModalOption("gallery"),
+                  },
+                ]
+              );
+            }}
+          >
             <MaterialIcons name="add-a-photo" size={22} color="#fff" />
           </TouchableOpacity>
         </View>

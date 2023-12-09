@@ -161,30 +161,26 @@ const AddPostScreen = ({ navigation }) => {
         ))}
       </Swiper>
       <View style={styles.addButtonContainer}>
-        <Modal
-          transparent={true}
-          animationType="fade"
-          visible={isImagePickerVisible}>
-          <TouchableOpacity
-            style={styles.imgOptionModal}
-            activeOpacity={1}
-            onPress={handleOverlayPress}>
-            <View style={styles.modalOptionContainer}>
-              <TouchableOpacity
-                style={styles.modalOption}
-                onPress={() => handleModalOption("camera")}>
-                <Text style={styles.modalOptionText}>Camera</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalOption}
-                onPress={() => handleModalOption("gallery")}>
-               <Text style={styles.modalOptionText}>Gallery</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </Modal>
-        <TouchableOpacity style={styles.addButton} onPress={pickImage}>
-          <MaterialIcons name="add-a-photo" size={22} color="white" />
+      <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            Alert.alert(
+              "Choose Image Source",
+              "Select the image source for your post",
+              [
+                {
+                  text: "Camera",
+                  onPress: () => handleModalOption("camera"),
+                },
+                {
+                  text: "Gallery",
+                  onPress: () => handleModalOption("gallery"),
+                },
+              ],
+            );
+          }}
+        >          
+        <MaterialIcons name="add-a-photo" size={22} color="white" />
         </TouchableOpacity>
       </View>
       <Modal transparent={true} animationType="fade" visible={loading}>
