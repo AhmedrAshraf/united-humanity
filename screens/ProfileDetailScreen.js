@@ -4,6 +4,7 @@ import {
   View,
   Image,
   Modal,
+  Alert,
   TextInput,
   StyleSheet,
   Dimensions,
@@ -82,19 +83,20 @@ const ProfileDetailScreen = ({ route, navigation }) => {
   };
 
   const handleUpload = async (img) => {
+    setLoading(true);
     try {
       console.log("🚀 ~ file: AddPostScreen.js:63 ~ handleUpload ~ img:", img);
-      setLoading(true);
       let res = await fetch(img);
       let blob = await res.blob();
       console.log("🚀 ~ file: AddPostScreen.js:66 ~ handleUpload ~ blob:", blob);
       let nam = Date.now().toString();
       console.log("🚀 ~ file: AddPostScreen.js:67 ~ handleUpload ~ nam:", nam);
       const storeRef = ref(storage, nam);
+      console.log("🚀 ~ file: AddPostScreen.js:69 ~ handleUpload ~ storeRef:", storeRef);
       await uploadBytes(storeRef, blob);
+      setLoading(false);
       const url = await getDownloadURL(storeRef);
       setImage(url);
-      setLoading(false);
       console.log("🚀 ~ file: AddPostScreen.js:72 ~ .then ~ url:", url);
     } catch (err) {
       alert(err);

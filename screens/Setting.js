@@ -1,34 +1,45 @@
+import React, { useContext, useEffect, useState } from "react";
 import {
   Text,
   View,
+  Alert,
+  Modal,
   Image,
   TextInput,
   StyleSheet,
   Dimensions,
   SafeAreaView,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
-import { database } from "../firebase";
-import logo from "../assets/appLogo.png";
-import { Button } from "react-native-paper";
-import { doc, getDoc } from "firebase/firestore";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
-import { UserContext } from "../utils/UserContext";
-import React, { useContext, useEffect, useState } from "react";
+import { launchCameraAsync, launchImageLibraryAsync } from 'expo-image-picker';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Button } from "react-native-paper";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { UserContext } from "../utils/UserContext";
+import { database, storage } from "../firebase";
+import * as ImagePicker from "expo-image-picker";
 
 const SettingScreen = ({ navigation }) => {
   const [user, setUser] = useState();
   const { uid, setUid } = useContext(UserContext);
+  const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState();
+  const [isImageSelected, setIsImageSelected] = useState();
 
   useEffect(() => {
     getUser();
   }, []);
 
-  const getUser = () => {
-    getDoc(doc(database, "users", uid)).then((docData) => {
-      setUser(docData.data());
-    });
+  const getUser = async () => {
+    try {
+      const userDoc = await getDoc(doc(database, "users", uid));
+      setUser(userDoc.data());
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
   };
 
   const handleLogout = () => {
@@ -36,9 +47,77 @@ const SettingScreen = ({ navigation }) => {
     AsyncStorage.removeItem("uid");
   };
 
-  const uri =
-    user?.profilePic ||
-    "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
+  const uri = image || user?.profilePic || "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
+
+  const getMediaLibraryPermission = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      alert("Sorry, we need media library permissions to make this work!");
+      return false;
+    }
+    return true;
+  };
+
+  const handleModalOption = async (option) => {
+
+    const hasPermission = await getMediaLibraryPermission();
+    if (!hasPermission) return;
+
+    try {
+      let result;
+      if (option === "camera") result = await launchCameraAsync();
+      else if (option === "gallery") result = await launchImageLibraryAsync();
+
+      if (result) {
+        setIsImageSelected(true);
+        handleUpload(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error handling image option:", error);
+    }
+  };
+
+  const handleUpload = async (img) => {
+    setLoading(true);
+    try {
+      let res = await fetch(img);
+      let blob = await res.blob();
+      let nam = Date.now().toString();
+      const storeRef = ref(storage, nam);
+      await uploadBytes(storeRef, blob);
+      setLoading(false);
+      const url = await getDownloadURL(storeRef);
+      setImage(url);
+    } catch (err) {
+      alert(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUsernameChange = (newUsername) => {
+    setUser((prevUser) => ({ ...prevUser, username: newUsername }));
+  };
+
+  const saveChanges = async () => {
+    try {
+      setLoading(true);
+      const userDocRef = doc(database, "users", user.uid);
+      await updateDoc(userDocRef, {
+        username: user.username,
+        profilePic: image,
+        updatedAt: Date.now(),
+      });
+      setLoading(false);
+      alert("Changes saved successfully!");
+      setUser((prevUser) => ({ ...prevUser, username: user.username, profilePic: image }));
+      navigation.navigate("Home");
+    } catch (err) {
+      console.error("Error saving changes:", err);
+      alert(err);
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -48,7 +127,7 @@ const SettingScreen = ({ navigation }) => {
           style={styles.arrow}
           onPress={() => navigation.goBack()}
         />
-        <Text style={{ fontSize: 20, fontWeight: "600" }}>Setting</Text>
+        <Text style={styles.headerTitle}>Setting</Text>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={handleLogout}
@@ -57,20 +136,37 @@ const SettingScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.SettingContainer}>
+      <View style={styles.settingContainer}>
         <View activeOpacity={0.9} style={styles.content}>
           <Image style={styles.previewImg} source={{ uri }} />
-        </View>
-        <View style={styles.SettingDetail}>
-          <Text style={styles.name}>{user?.name || "Loading..."}</Text>
-          <Text style={styles.email}>{user?.email || "Loading..."}</Text>
+          <TouchableOpacity
+            style={styles.editBox}
+            onPress={() => {
+              Alert.alert(
+                "Choose Image Source",
+                "Select the image source for your post",
+                [
+                  {
+                    text: "Camera",
+                    onPress: () => handleModalOption("camera"),
+                  },
+                  {
+                    text: "Gallery",
+                    onPress: () => handleModalOption("gallery"),
+                  },
+                ]
+              );
+            }}
+          >
+            <MaterialIcons name="edit" size={22} color="#fff" />
+          </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.SettingData}>
+
+      <View style={styles.settingData}>
         <View style={styles.inputBox}>
           <Text style={styles.label}>
-            Full Name
-            <Text style={{ color: "#DA1414" }}> *</Text>
+            Full Name<Text style={{ color: "#DA1414" }}> *</Text>
           </Text>
           <TextInput
             editable={false}
@@ -80,29 +176,38 @@ const SettingScreen = ({ navigation }) => {
             value={user?.name || "----------"}
           />
         </View>
+
         <View style={styles.inputBox}>
           <Text style={styles.label}>
-            Email
-            <Text style={{ color: "#DA1414" }}> *</Text>
+            Username<Text style={{ color: "#DA1414" }}> *</Text>
           </Text>
           <TextInput
             editable={false}
             style={styles.input}
             placeholder="Username"
             placeholderTextColor="gray"
-            value={user?.email || "----------"}
+            onChange={handleUsernameChange}
+            value={user?.username || "----------"}
           />
         </View>
       </View>
+
       <Button
         icon="logout"
         mode="contained"
         uppercase={false}
-        style={styles.but}
-        onPress={handleLogout}
+        style={styles.button}
+        onPress={saveChanges}
       >
-        Logout
+        Save Changes
       </Button>
+      <Modal transparent={true} animationType="fade" visible={loading}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <ActivityIndicator size={40} color="#01AEF0" />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -113,6 +218,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
+    alignItems: "center",
   },
   header: {
     width: "100%",
@@ -127,15 +233,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     justifyContent: "space-between",
   },
-  logo: {
-    width: 60,
-    height: 60,
-  },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   headerTitle: {
     fontSize: 18,
     marginLeft: 10,
@@ -145,54 +242,42 @@ const styles = StyleSheet.create({
     fontSize: 30,
     color: "#000",
   },
-  SettingContainer: {
+  settingContainer: {
     width: "100%",
     paddingBottom: 20,
     borderBottomWidth: 1,
     alignContent: "center",
     borderBottomColor: "gainsboro",
-    marginTop: 20
+    marginTop: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   previewImg: {
-    width: 90,
-    height: 90,
+    width: 120,
+    height: 120,
     borderRadius: 120,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "gainsboro",
   },
   content: {
-    width: "100%",
+    width: "30%",
+    paddingBottom: 10,
     marginBottom: 10,
     alignItems: "center",
   },
-  name: {
-    fontSize: 18,
-    marginLeft: 10,
-    fontWeight: "600",
-  },
-  email: {
-    fontSize: 16,
-  },
   editBox: {
-    right: 0,
     bottom: 0,
-    top: 130,
-    left: 240,
+    left: 80,
     width: 40,
     height: 40,
     borderRadius: 100,
     position: "absolute",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#62E1EF",
+    backgroundColor: "#01AEF0",
   },
-  SettingDetail: {
-    width: "100%",
-    alignItems: "center",
-    position: "relative",
-  },
-  SettingData: {
+  settingData: {
     paddingTop: 20,
   },
   input: {
@@ -226,7 +311,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: "5%",
     marginTop: 5,
   },
-  but: {
+  button: {
     bottom: 50,
     width: "90%",
     marginTop: 10,
@@ -235,5 +320,22 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     position: "absolute",
     backgroundColor: "#01AEF0",
+  },
+  centeredView: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(100, 100, 100, .5)",
+  },
+  modalView: {
+    padding: 30,
+    elevation: 5,
+    shadowRadius: 4,
+    borderRadius: 10,
+    shadowOpacity: 0.25,
+    shadowColor: "#000",
+    alignItems: "center",
+    backgroundColor: "white",
+    shadowOffset: { width: 0, height: 2 },
   },
 });
