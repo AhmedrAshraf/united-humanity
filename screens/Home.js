@@ -16,9 +16,9 @@ import moment from "moment";
 import {
   query,
   arrayUnion,
+  arrayRemove,
   collection,
   updateDoc,
-  arrayRemove,
   orderBy,
   getDocs,
   where,
@@ -34,48 +34,67 @@ const Home = ({ navigation }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [following, setFollowing] = useState([]);
-  const [limit, setLimit] = useState(10);
+  const [likedPosts, setLikedPosts] = useState([]);
 
   const uri = user?.profilePic || "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        if (!following.length && user?.uid) {
-          const userDocRef = doc(collection(database, "users"), user.uid);
-          const userDoc = await getDoc(userDocRef);
-          const updatedFollowing = (userDoc.data()?.following || []).map(String);
-          setFollowing(updatedFollowing);
-        }
-
-        const allPostsQuery = query(collection(database, "posts"), orderBy("createdAt", "desc"));
-        const followingPostsQuery = following.length > 0
-          ? query(collection(database, "posts"), where("userId", "in", following), orderBy("createdAt", "desc"))
-          : null;
-        const queryToUse = followingPostsQuery || allPostsQuery;
-
-        const snap = await getDocs(queryToUse);
-        const followingPosts = await Promise.all(snap.docs.map(async (doc) => await processPost(doc)));
-
-        const allPostsSnapshot = await getDocs(allPostsQuery);
-        const allPosts = await Promise.all(allPostsSnapshot.docs.map((doc) => processPost(doc)));
-
-        const uniquePostsSet = new Set(allPosts.map((post) => post.id));
-        const uniqueFollowingPosts = followingPosts.filter((post) => !uniquePostsSet.has(post.id));
-
-        setPosts(uniqueFollowingPosts.concat(allPosts).filter((post) => post.userId !== user?.uid));
-
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-        console.error("Error fetching data:", error);
-      }
-    };
-
     fetchData();
-  }, [user, following.length]);
+  }, [user, following.length, likedPosts]);
+
+  const handleLikeButtonClick = async (postId) => {
+    try {
+      const postIndex = likedPosts.indexOf(postId);
+
+      if (postIndex !== -1) {
+        await updateLikes(postId, arrayRemove(user?.uid));
+      } else {
+        await updateLikes(postId, arrayUnion(user?.uid));
+      }
+    } catch (error) {
+      console.error("Error updating likes:", error);
+    }
+  };
+
+  const updateLikes = async (postId, updateType) => {
+    await updateDoc(doc(database, "posts", postId), { likes: updateType });
+    setLikedPosts((prevLikedPosts) => (updateType === arrayRemove(user?.uid) ? prevLikedPosts.filter((id) => id !== postId) : [...prevLikedPosts, postId]));
+  };
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      if (!following.length && user?.uid) {
+        const userDocRef = doc(collection(database, "users"), user.uid);
+        const userDoc = await getDoc(userDocRef);
+        const updatedFollowing = (userDoc.data()?.following || []).map(String);
+        setFollowing(updatedFollowing);
+      }
+
+      const allPostsQuery = query(collection(database, "posts"), orderBy("createdAt", "desc"));
+      const followingPostsQuery = following.length > 0
+        ? query(collection(database, "posts"), where("userId", "in", following), orderBy("createdAt", "desc"))
+        : null;
+
+      const queryToUse = followingPostsQuery || allPostsQuery;
+      const snap = await getDocs(queryToUse);
+      const postsData = snap.docs.map((doc) => processPost(doc));
+
+      const followingPosts = await Promise.all(snap.docs.map(async (doc) => await processPost(doc)));
+      const allPostsSnapshot = await getDocs(allPostsQuery);
+      const allPosts = await Promise.all(allPostsSnapshot.docs.map((doc) => processPost(doc)));
+
+      const uniquePostsSet = new Set(allPosts.map((post) => post.id));
+      const uniqueFollowingPosts = followingPosts.filter((post) => !uniquePostsSet.has(post.id));
+
+      setPosts(uniqueFollowingPosts.concat(allPosts).filter((post) => post.userId !== user?.uid));
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.error("Error fetching data:", error);
+    }
+  };
 
   const handleFollowerButtonClick = async (postUserId) => {
     try {
@@ -86,15 +105,11 @@ const Home = ({ navigation }) => {
       const stringPostUserId = postUserId.toString();
       const isFollowing = (currentUserData.following || []).includes(stringPostUserId);
 
-      if (isFollowing) {
-        await updateDoc(userDocRef, { following: arrayRemove(stringPostUserId) });
-        await updateDoc(targetUserDocRef, { followers: arrayRemove(user?.uid) });
-      } else {
-        await updateDoc(userDocRef, { following: arrayUnion(stringPostUserId) });
-        await updateDoc(targetUserDocRef, { followers: arrayUnion(user?.uid) });
-      }
+      const followingUpdate = isFollowing ? arrayRemove(stringPostUserId) : arrayUnion(stringPostUserId);
+      await updateDoc(userDocRef, { following: followingUpdate });
+      await updateDoc(targetUserDocRef, { followers: followingUpdate });
 
-      setFollowing((prevFollowing) => isFollowing ? prevFollowing.filter((id) => id !== stringPostUserId) : [...prevFollowing, stringPostUserId]);
+      setFollowing((prevFollowing) => (isFollowing ? prevFollowing.filter((id) => id !== stringPostUserId) : [...prevFollowing, stringPostUserId]));
     } catch (error) {
       console.error("Error updating following:", error);
     }
@@ -110,6 +125,7 @@ const Home = ({ navigation }) => {
         id: doc.id,
         creatorName: postData.creatorName || userData?.username,
         creatorPic: userData?.profilePic || "https://default-profile-pic-url.com",
+        likes: postData.likes || [],
       };
     } catch (error) {
       console.error("Error processing post data:", error);
@@ -177,6 +193,19 @@ const Home = ({ navigation }) => {
                 <Image key={index} source={{ uri: url }} style={styles.postImage} />
               ))}
             </Swiper>
+            <TouchableOpacity
+              style={styles.likeButton}
+              onPress={() => handleLikeButtonClick(post.id)}
+            >
+              <FontAwesome
+                name={post.likes && post.likes.includes(user?.uid) ? "heart" : "heart-o"}
+                size={24}
+                color={post.likes && post.likes.includes(user?.uid) ? "red" : "black"}
+              />
+            </TouchableOpacity>
+            <Text style={styles.likeCount}>
+              {post.likes ? `${post.likes.length} Likes` : '0 Likes'}
+            </Text>
             <Text style={{ fontSize: 16, marginLeft: 10, fontWeight: "600" }}>{post.title}</Text>
           </View>
         ))}
@@ -304,6 +333,16 @@ const styles = StyleSheet.create({
   },
   followerButtonText: {
     color: "white",
+    fontWeight: "bold",
+  },
+  likeButton: {
+    marginLeft: 10,
+    marginBottom: 5,
+  },
+  likeCount: {
+    marginLeft: 10,
+    marginBottom: 10,
+    color: "black",
     fontWeight: "bold",
   },
 });
