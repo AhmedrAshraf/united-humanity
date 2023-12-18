@@ -263,13 +263,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginLeft: 10,
-    borderRadius: 120,
+    borderRadius: 10,
     backgroundColor: "gainsboro",
   },
   profilePic: {
     width: 40,
     height: 40,
-    borderRadius: 120,
+    borderRadius: 10,
     backgroundColor: "gainsboro",
   },
   name: {

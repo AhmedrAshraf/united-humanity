@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   previewImg: {
     width: 120,
     height: 120,
-    borderRadius: 120,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "gainsboro",

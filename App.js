@@ -145,6 +145,7 @@ export default function App() {
   async function loadFonts() {
     await Font.loadAsync({
       'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
+      'Poppins-Bold': require('./assets/fonts/Poppins-Bold.ttf'),
       'Poppins-Medium': require('./assets/fonts/Poppins-Medium.ttf'),
       'Outfit-Regular': require('./assets/fonts/Outfit-Regular.ttf'),
     });

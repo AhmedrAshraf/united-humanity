@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   profilePic: {
     width: 40,
     height: 40,
-    borderRadius: 120,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "gainsboro",
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   image: {
     width: 40,
     height: 40,
-    borderRadius: 100,
+    borderRadius: 10,
   },
   brand: {
     fontSize: 16,
