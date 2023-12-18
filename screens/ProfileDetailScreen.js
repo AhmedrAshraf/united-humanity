@@ -137,7 +137,7 @@ const ProfileDetailScreen = ({ route, navigation }) => {
           style={styles.arrow}
           onPress={() => navigation.goBack()}
         />
-        <Text style={{ fontSize: 20, fontWeight: "600" }}>Profile</Text>
+        <Text style={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}>Profile</Text>
         <TouchableOpacity activeOpacity={0.8}>
           <MaterialIcons name={"logout"} size={26} color="#000" />
         </TouchableOpacity>
@@ -211,6 +211,7 @@ const ProfileDetailScreen = ({ route, navigation }) => {
         mode="contained"
         uppercase={false}
         style={styles.but}
+        labelStyle={{fontFamily: 'Poppins-Medium'}}
         onPress={saveChanges}
       >
         Save
@@ -300,6 +301,7 @@ const styles = StyleSheet.create({
     shadowColor: "#470000",
     backgroundColor: "white",
     shadowOffset: { width: 0, height: 3 },
+    fontFamily: 'Poppins-Medium'
   },
   label: {
     opacity: 0.8,
@@ -307,7 +309,7 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     marginBottom: 10,
     color: "#2C3A4B",
-    fontWeight: "700",
+    fontFamily: 'Poppins-Regular'
   },
   inputBox: {
     width: Dimensions.get("window").width,

@@ -161,7 +161,7 @@ const Home = ({ navigation }) => {
         <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate("Profile", user)}>
           <Image style={styles.profilePic} source={{ uri }} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: "600" }}>Home</Text>
+        <Text style={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}>Home</Text>
         <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate("ProfileDetailScreen", user)}>
           <MaterialIcons name="settings" size={26} color="#000" />
         </TouchableOpacity>
@@ -206,7 +206,7 @@ const Home = ({ navigation }) => {
             <Text style={styles.likeCount}>
               {post.likes ? `${post.likes.length} Likes` : '0 Likes'}
             </Text>
-            <Text style={{ fontSize: 16, marginLeft: 10, fontWeight: "600" }}>{post.title}</Text>
+            <Text style={{ fontSize: 16, marginLeft: 10, fontFamily: 'Poppins-Regular' }}>{post.title}</Text>
           </View>
         ))}
       </ScrollView>
@@ -275,6 +275,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: "600",
+    fontFamily: 'Outfit-Regular',
   },
   postTime: {
     fontSize: 14,
@@ -333,7 +334,7 @@ const styles = StyleSheet.create({
   },
   followerButtonText: {
     color: "white",
-    fontWeight: "bold",
+    fontFamily: 'Poppins-Regular'
   },
   likeButton: {
     marginLeft: 10,
@@ -343,6 +344,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginBottom: 10,
     color: "black",
-    fontWeight: "bold",
+    fontFamily: 'Poppins-Regular'
   },
 });

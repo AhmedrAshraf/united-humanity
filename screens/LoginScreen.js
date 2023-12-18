@@ -172,9 +172,9 @@ const LoginScreen = ({ navigation }) => {
             disabled={loading}
             style={styles.but}
             onPress={handleLogin}
-            labelStyle={{ fontSize: 20, fontWeight: "600" }}
+            labelStyle={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}
           >
-            Sign in
+            Sign In
           </Button>
         </View>
         <Modal transparent={true} animationType="fade" visible={loading}>
@@ -224,13 +224,13 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 16,
     marginBottom: 40,
-    fontWeight: "500",
+    fontFamily: 'Poppins-Regular'
   },
   appName: {
     fontSize: 24,
     marginTop: 10,
     marginBottom: 60,
-    fontWeight: "800",
+    fontFamily: 'Poppins-Medium'
   },
   but: {
     width: "90%",
@@ -272,6 +272,7 @@ const styles = StyleSheet.create({
     shadowColor: "#470000",
     backgroundColor: "white",
     shadowOffset: { width: 0, height: 3 },
+    fontFamily: 'Poppins-Medium'
   },
   inputBox: {
     paddingHorizontal: "5%",
@@ -284,7 +285,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   txt: {
-    opacity: 0.8,
-    fontWeight: "600",
+    fontFamily: 'Poppins-Regular'
   },
 });

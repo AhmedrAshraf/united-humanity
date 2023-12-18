@@ -67,7 +67,7 @@ const ChatScreen = ({ navigation }) => {
         >
           <Image style={styles.profilePic} source={{ uri }} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: 600 }}>Chat</Text>
+        <Text style={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}>Chat</Text>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => navigation.navigate("Setting", user)}
@@ -227,6 +227,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 3,
     textTransform: "capitalize",
+    fontFamily: 'Outfit-Regular',
   },
   package: {
     fontSize: 10,
@@ -261,6 +262,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     shadowColor: "rgba(0,0,0,0.2)",
     shadowOffset: { width: 0, height: 0 },
+    fontFamily: 'Poppins-Regular'
   },
   searchIcon: {
     right: 20,

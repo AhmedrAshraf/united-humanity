@@ -125,9 +125,9 @@ const AddPostScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <MaterialIcons name={"close"} size={22} color="#000" />
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: 600 }}>Create Post</Text>
+        <Text style={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}>Create Post</Text>
         <TouchableOpacity onPress={createPost}>
-          <Text style={{ fontSize: 18, color: "#000" }}>Post</Text>
+          <Text style={{ fontSize: 18, color: "#000", fontFamily: 'Poppins-Regular' }}>Post</Text>
         </TouchableOpacity>
       </View>
 
@@ -243,9 +243,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   name: {
-    fontSize: 18,
+    fontSize: 26,
     marginLeft: 10,
-    fontWeight: "600",
+    fontFamily: 'Outfit-Regular',
   },
   inputContainer: {
     margin: 10,
@@ -256,6 +256,7 @@ const styles = StyleSheet.create({
     color: "#000",
     flexWrap: "wrap",
     overflow: "visible",
+    fontFamily: 'Poppins-Regular',
   },
   postImage: {
     height: 340,

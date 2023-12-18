@@ -89,7 +89,7 @@ const Profile = ({ navigation }) => {
           style={styles.arrow}
           onPress={() => navigation.goBack()}
         />
-        <Text style={{ fontSize: 20, fontWeight: "600" }}>Profile</Text>
+        <Text style={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}>Profile</Text>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => navigation.navigate("Setting", user)}
@@ -104,7 +104,7 @@ const Profile = ({ navigation }) => {
             <Image style={styles.previewImg} source={{ uri }} />
           </View>
           <View style={styles.userInfoContainer}>
-            <Text style={styles.userName}>{user?.username || "Loading..."}</Text>
+            <Text style={styles.userName}>{user?.name || "Loading..."}</Text>
             <View>
               <Text style={{fontWeight: 600}}>
               Followers: {followersCount}
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     left: 25,
     bottom: 25,
     fontSize: 18,
-    fontWeight: "600",
+    fontFamily: 'Outfit-Regular',
   },
   userInfoContainer: {
     flexDirection: "column",
@@ -228,6 +228,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginTop: -20,
     fontWeight: "500",
+    fontFamily: 'Outfit-Regular'
   },
   editButton: {
     width: 120,
@@ -265,7 +266,7 @@ const styles = StyleSheet.create({
   },
   creatorName: {
     fontSize: 18,
-    fontWeight: "600",
+    fontFamily: 'Outfit-Regular',
   },
   postTime: {
     fontSize: 14,
@@ -286,7 +287,7 @@ const styles = StyleSheet.create({
   postTitle: {
     fontSize: 16,
     marginLeft: 10,
-    fontWeight: "600",
+    fontFamily: 'Poppins-Regular'
   },
   addButton: {
     position: "absolute",

@@ -73,7 +73,7 @@ const ChatScreen = ({ navigation }) => {
         >
           <Image style={styles.profilePic} source={{ uri }} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: 600 }}>Search</Text>
+        <Text style={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}>Search</Text>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => navigation.navigate("Setting", user)}
@@ -124,7 +124,7 @@ const ChatScreen = ({ navigation }) => {
                   <View>
                     <Text style={styles.brand}>{user.name}</Text>
                     <Text style={styles.package} numberOfLines={2}>
-                      {user.email}
+                      {user.username}
                     </Text>
                   </View>
                 </View>
@@ -213,17 +213,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 3,
     textTransform: "capitalize",
+    fontFamily: 'Outfit-Regular'
   },
   package: {
     fontSize: 10,
     color: "gray",
     width: Dimensions.get("window").width * 0.45,
+    fontFamily: 'Poppins-Regular'
   },
   read: {
     color: "gray",
     marginBottom: 5,
+    fontFamily: 'Poppins-Regular'
   },
-
   searchContainer: {
     width: "92%",
     alignSelf: "center",
@@ -246,6 +248,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     shadowColor: "rgba(0,0,0,0.2)",
     shadowOffset: { width: 0, height: 0 },
+    fontFamily: 'Poppins-Regular'
   },
   searchIcon: {
     right: 20,

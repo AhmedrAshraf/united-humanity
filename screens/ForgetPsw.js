@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { auth } from "../firebase";
 import React, { useState } from "react";
-import logo from "../assets/appLogo.png";
+import logo from "../assets/logo.png";
 import { StatusBar } from "expo-status-bar";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -81,9 +81,9 @@ const LoginScreen = ({ navigation }) => {
             disabled={loading}
             style={styles.but}
             onPress={handleLogin}
-            labelStyle={{ fontSize: 20, fontWeight: "600" }}
+            labelStyle={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}
           >
-            Resset
+            Reset
           </Button>
         </View>
         <Modal transparent={true} animationType="fade" visible={loading}>
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   },
   inputIcon: {
     top: 15,
-    left: 30,
+    left: 40,
     zIndex: 7,
     opacity: 0.6,
     fontSize: 20,
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     top: -55,
-    right: 20,
+    right: 25,
     zIndex: 7,
     opacity: 0.6,
     fontSize: 20,
@@ -132,13 +132,15 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 16,
-    marginBottom: 30,
+    marginBottom: 40,
     fontWeight: "500",
+    fontFamily: 'Poppins-Regular'
   },
   appName: {
     fontSize: 24,
+    marginTop: 10,
     marginBottom: 60,
-    fontWeight: "800",
+    fontFamily: 'Poppins-Medium'
   },
   but: {
     width: "90%",
@@ -169,17 +171,18 @@ const styles = StyleSheet.create({
     elevation: 4,
     width: "100%",
     borderWidth: 1,
-    paddingLeft: 35,
-    borderRadius: 5,
-    shadowRadius: 3,
+    paddingLeft: 50,
+    borderRadius: 100,
+    shadowRadius: 8,
     marginBottom: 20,
     fontWeight: "600",
     shadowOpacity: 0.15,
     paddingVertical: 15,
+    borderColor: "#EBEEF2",
     shadowColor: "#470000",
-    borderColor: "gainsboro",
     backgroundColor: "white",
     shadowOffset: { width: 0, height: 3 },
+    fontFamily: 'Poppins-Medium'
   },
   inputBox: {
     paddingHorizontal: "5%",
@@ -192,7 +195,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   txt: {
-    opacity: 0.8,
-    fontWeight: "600",
+    fontFamily: 'Poppins-Regular'
   },
 });

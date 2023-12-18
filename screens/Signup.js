@@ -199,6 +199,7 @@ const CreateAdminScreen = ({ navigation }) => {
             uppercase={false}
             disabled={loading}
             style={Platform.isPad ? [styles.but, styles.ph] : styles.but}
+            labelStyle={{fontFamily: 'Poppins-Medium'}}
             onPress={handleSubmit}
           >
             Create Account
@@ -237,13 +238,13 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 16,
     marginBottom: 30,
-    fontWeight: "500",
+    fontFamily: 'Poppins-Regular'
   },
   appName: {
     fontSize: 24,
     marginBottom: 60,
     marginTop: 10,
-    fontWeight: "800",
+    fontFamily: 'Poppins-Medium'
   },
   input: {
     fontSize: 15,
@@ -261,6 +262,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     shadowColor: "#470000",
     shadowOffset: { width: 0, height: 3 },
+    fontFamily: 'Poppins-Medium'
   },
   inputBox: {
     width: Dimensions.get("window").width,
@@ -275,7 +277,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginBottom: 5,
     color: "#2C3A4B",
-    fontWeight: "700",
+    fontFamily: 'Poppins-Regular'
   },
   but: {
     width: "90%",
@@ -387,7 +389,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   txt: {
-    opacity: 0.8,
-    fontWeight: "600",
+    fontFamily: 'Poppins-Regular'
+
   },
 });

@@ -1,3 +1,4 @@
+import * as Font from 'expo-font';
 import Home from "./screens/Home";
 import Users from "./screens/Chat";
 import Signup from "./screens/Signup";
@@ -140,6 +141,18 @@ function Routes() {
 }
 
 export default function App() {
+  
+  async function loadFonts() {
+    await Font.loadAsync({
+      'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
+      'Poppins-Medium': require('./assets/fonts/Poppins-Medium.ttf'),
+      'Outfit-Regular': require('./assets/fonts/Outfit-Regular.ttf'),
+    });
+  }
+
+  useEffect(() => {
+    loadFonts();
+  }, []);
   return (
     <SafeAreaProvider>
       <UserProvider>

@@ -237,6 +237,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 10,
     fontWeight: "600",
+    fontFamily: 'Poppins-Medium'
   },
   arrow: {
     fontSize: 30,
@@ -305,11 +306,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "#2C3A4B",
     fontWeight: "700",
+    fontFamily: 'Poppins-Medium'
   },
   inputBox: {
     width: Dimensions.get("window").width,
     paddingHorizontal: "5%",
     marginTop: 5,
+    fontFamily: 'Outfit-Regular'
   },
   button: {
     bottom: 50,
@@ -320,6 +323,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     position: "absolute",
     backgroundColor: "#01AEF0",
+    fontFamily: 'Poppins-Medium'
   },
   centeredView: {
     flex: 1,
