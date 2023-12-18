@@ -152,15 +152,15 @@ const Profile = ({ navigation }) => {
             <Text style={styles.postTitle}>{post.title}</Text>
           </View>
         ))}
+    </ScrollView>
+      <View style={styles.addButtonContainer}>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => {
-            navigation.navigate("AddPostScreen");
-          }}
-        >
+            navigation.navigate("AddPostScreen")}}>
           <FontAwesome name="plus" size={20} color="white" />
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -289,15 +289,18 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontFamily: 'Poppins-Regular'
   },
-  addButton: {
+  addButtonContainer: {
     position: "absolute",
     bottom: 20,
     right: 20,
+    zIndex: 1,
+  },
+  addButton: {
     width: 50,
     height: 50,
     borderRadius: 25,
     backgroundColor: "#01AEF0",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
   },
 });
