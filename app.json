@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "United Humanity",
-    "slug": "United Humanity",
+    "slug": "united-humanity",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",

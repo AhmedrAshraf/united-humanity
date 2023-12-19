@@ -141,6 +141,7 @@ function Routes() {
 }
 
 export default function App() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
   
   async function loadFonts() {
     await Font.loadAsync({
@@ -149,11 +150,21 @@ export default function App() {
       'Poppins-Medium': require('./assets/fonts/Poppins-Medium.ttf'),
       'Outfit-Regular': require('./assets/fonts/Outfit-Regular.ttf'),
     });
+    setFontsLoaded(true);
   }
 
   useEffect(() => {
     loadFonts();
   }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size={40} color="green" />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <UserProvider>
