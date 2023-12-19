@@ -235,16 +235,25 @@ const styles = StyleSheet.create({
   },
   header: {
     width: "100%",
-    paddingBottom: 20,
+    paddingVertical: 10,
+    marginBottom: 20,
+    alignItems: "center",
+    justifyContent: 'space-between',
     flexDirection: "row",
     paddingHorizontal: 25,
-    shadowColor: "gainsboro",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
     backgroundColor: "white",
-    justifyContent: "space-between",
-  },
+    ...Platform.select({
+      android: {
+        elevation: 5,
+      },
+      ios: {
+        shadowColor: "gainsboro",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+      },
+    }),
+  },  
   post: {
     marginTop: 25,
     padding: 10,

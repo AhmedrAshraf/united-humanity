@@ -202,12 +202,26 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f2f5",
   },
   header: {
-    width: "95%",
-    padding: 10,
+    width: "100%",
+    paddingVertical: 10,
     marginBottom: 20,
     alignItems: "center",
+    justifyContent: 'center',
     flexDirection: "row",
+    paddingHorizontal: 25,
+    backgroundColor: "#f1f2f5",
     justifyContent: "space-between",
+    ...Platform.select({
+      android: {
+        elevation: 5,
+      },
+      ios: {
+        shadowColor: "gainsboro",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+      },
+    }),
   },
   postImg: {
     width: 300,

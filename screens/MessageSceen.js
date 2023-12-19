@@ -247,14 +247,26 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   header: {
-    height: 70,
     width: "100%",
+    paddingVertical: 10,
+    marginBottom: 20,
     alignItems: "center",
+    justifyContent: 'center',
     flexDirection: "row",
-    borderBottomWidth: 1,
-    paddingHorizontal: 20,
-    borderBottomColor: "gainsboro",
+    paddingHorizontal: 25,
+    backgroundColor: "white",
     justifyContent: "space-between",
+    ...Platform.select({
+      android: {
+        elevation: 5,
+      },
+      ios: {
+        shadowColor: "gainsboro",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+      },
+    }),
   },
   center: {
     flex: 1,
