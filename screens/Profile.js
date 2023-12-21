@@ -337,10 +337,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     width: "92%",
     marginHorizontal: "4%",
-    shadowColor: "gainsboro",
-    shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 1,
-    shadowRadius: 6,
+    ...Platform.select({
+      android: {
+        elevation: 5,
+      },
+      ios: {
+        shadowColor: "gainsboro",
+        shadowOffset: { width: 1, height: 1 },
+        shadowOpacity: 1,
+        shadowRadius: 6,
+      },
+    }),
     borderRadius: 10,
     backgroundColor: "#fff",
     justifyContent: "space-between",
