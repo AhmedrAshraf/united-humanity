@@ -336,6 +336,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "gainsboro",
   },
+  profilePic: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: "gainsboro",
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: "600",
+    fontFamily: 'Outfit-Regular',
+  },
+  postTime: {
+    fontSize: 14,
+    color: "gray",
+  },
   postImage: {
     height: 340,
     width: "95%",
