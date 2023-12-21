@@ -222,10 +222,12 @@ const Profile = ({ navigation }) => {
                 </View>
               ))}
             </Swiper>
-            <TouchableOpacity style={styles.likeButton} onPress={() => handleLikeButtonClick(post.id)}>
-              <FontAwesome name={post.likes && post.likes.includes(user?.uid) ? "heart" : "heart-o"} size={24} color={post.likes && post.likes.includes(user?.uid) ? "red" : "black"} />
-            </TouchableOpacity>
-            <Text style={styles.likeCount}>{post.likes ? `${post.likes.length} Likes` : '0 Likes'}</Text>
+            <View style={styles.likesContainer}>
+             <TouchableOpacity style={styles.likeButton} onPress={() => handleLikeButtonClick(post.id)}>
+               <FontAwesome name={post.likes && post.likes.includes(user?.uid) ? "heart" : "heart-o"} size={22} color={post.likes && post.likes.includes(user?.uid) ? "red" : "black"} />
+             </TouchableOpacity>
+             <Text style={styles.likeCount}>{post.likes ? `${post.likes.length} Likes` : '0 Likes'}</Text>
+            </View>
             <Text style={styles.postTitle}>{post.title}</Text>
           </View>
         ))}
@@ -402,13 +404,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 6,
   },
+  likesContainer:{
+    display: 'flex',
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
   likeButton: {
     marginLeft: 10,
-    marginBottom: 5,
   },
   likeCount: {
     marginLeft: 10,
-    marginBottom: 10,
     color: "black",
     fontFamily: 'Poppins-Regular'
   },
