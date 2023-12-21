@@ -1,3 +1,4 @@
+import React, { useContext, useState, useRef, useEffect } from "react";
 import {
   Text,
   View,
@@ -10,28 +11,31 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { Video } from 'expo-av';
 import { database, storage } from "../firebase";
 import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons } from "@expo/vector-icons";
 import { UserContext } from "../utils/UserContext";
-import React, { useContext, useEffect, useState } from "react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, updateDoc, addDoc, collection } from "firebase/firestore";
 import Swiper from "react-native-swiper";
 import { launchCameraAsync, launchImageLibraryAsync } from "expo-image-picker";
+import Slider from '@react-native-community/slider';
 
 const AddPostScreen = ({ navigation }) => {
+  const videoRef = useRef(null);
   const { uid, user } = useContext(UserContext);
 
   const [title, setTitle] = useState("");
-  const [image, setImage] = useState([]);
+  const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isImageSelected, setIsImageSelected] = useState(false);
-  const [isImagePickerVisible, setImagePickerVisible] = useState(false);
+  const [isMediaSelected, setIsMediaSelected] = useState(false);
+  const [isMediaPickerVisible, setMediaPickerVisible] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
 
-  const uri =
-    user?.profilePic ||
-    "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
+  const uri = user?.profilePic || "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   const getMediaLibraryPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -42,100 +46,124 @@ const AddPostScreen = ({ navigation }) => {
     return true;
   };
 
-  const pickImage = () => {
-    setImagePickerVisible(true);
-  };
-  const handleOverlayPress = () => {
-    setImagePickerVisible(false);
-  };
-  const handleModalOption = async (option) => {
-    setImagePickerVisible(false);
-
+  const pickMedia = async (mediaType) => {
+    setMediaPickerVisible(false);
+  
     const hasPermission = await getMediaLibraryPermission();
-    if (!hasPermission) {
-      return;
-    }
-
-    let result;
-    if (option === "camera") {
-      result = await launchCameraAsync();
-    } else if (option === "gallery") {
-      result = await launchImageLibraryAsync();
-    }
-    if (result) {
-      setIsImageSelected(true);
+    if (!hasPermission) return;
+  
+    const result = await (mediaType === "camera"
+      ? launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.All })
+      : launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.All }));
+  
+    if (result && !result.canceled) {
+      setIsMediaSelected(true);
       handleUpload(result.assets[0].uri);
     }
-  };
+  };  
 
-  const handleUpload = async (img) => {
+  const handleUpload = async (mediaUri) => {
     try {
-      console.log("🚀 ~ file: AddPostScreen.js:63 ~ handleUpload ~ img:", img)
-      setLoading(true)
-      let res = await fetch(img);
-      let blob = await res.blob();
-      console.log("🚀 ~ file: AddPostScreen.js:66 ~ handleUpload ~ blob:", blob)
-      let nam = Date.now().toString();
-      console.log("🚀 ~ file: AddPostScreen.js:67 ~ handleUpload ~ nam:", nam)
+      setLoading(true);
+  
+      const res = await fetch(mediaUri);
+      const blob = await res.blob();
+      const nam = Date.now().toString();
       const storeRef = ref(storage, nam);
-      console.log( "🚀 ~ file: AddPostScreen.js:69 ~ handleUpload ~ storeRef:", storeRef)
+  
       await uploadBytes(storeRef, blob);
       const url = await getDownloadURL(storeRef);
-      setImage((prevImages) => [...prevImages, url]);
-      setLoading(false);
-      console.log("🚀 ~ file: AddPostScreen.js:72 ~ .then ~ url:", url);
+  
+      const fileType = mediaUri.split('.').pop();
+      const type = fileType === 'mp4' ? 'video' : 'image';
+  
+      setMedia((prevMedia) => [...prevMedia, { type, url }]);
     } catch (err) {
-      alert(err);
+      console.error("Error handling upload:", err);
+      alert("Error handling upload. Please try again later.");
+    } finally {
       setLoading(false);
     }
+  };  
+
+  const formatDuration = (milliseconds) => {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
+  const handleSeek = async (seconds) => {
+    const newPosition = Math.max(0, Math.min(currentPosition + seconds * 1000, videoDuration));
+    await videoRef.current.setPositionAsync(newPosition);
+    setCurrentPosition(newPosition);
+  };
+
+  const toggleVideoPlayback = () => {
+    if (isVideoPlaying) videoRef.current.pauseAsync();
+    else videoRef.current.playAsync();
+    setIsVideoPlaying(!isVideoPlaying);
+  };
+
+  const handleSliderChange = (value) => {
+    videoRef.current.setPositionAsync(value * videoDuration);
+    setCurrentPosition(value * videoDuration);
   };
 
   const createPost = async () => {
-    if (!image || image.length === 0) {
+    if (!media || media.length === 0) {
       alert("Please select at least one image for your post.");
       return;
     }
-
+  
+    if (!title.trim()) {
+      alert("Please enter a title for your post.");
+      return;
+    }
+  
     try {
       const postCollection = collection(database, "posts");
-        const post = {
-          title,
-          creatorName: user.name || null,
-          username: user.username || null,
-          imageUrl: image || null,
-          userId: uid,
-          creatorPic: user.profilePic || null,
-          createdAt: new Date(),
-        };
-
-        await addDoc(postCollection, post);
+      const post = {
+        title,
+        creatorName: user.name || null,
+        username: user.username || null,
+        media: media || null,
+        userId: uid,
+        creatorPic: user.profilePic || null,
+        createdAt: new Date(),
+      };
+  
+      await addDoc(postCollection, post);
       setTitle("");
-      setImage([]);
-      setIsImageSelected(false);
+      setMedia([]);
+      setIsMediaSelected(false);
       navigation.goBack();
     } catch (error) {
       console.error("Error creating post:", error);
       alert("Error creating the post. Please try again later.");
     }
-  };
+  };  
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header Section */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <MaterialIcons name={"close"} size={22} color="#000" />
+          <MaterialIcons name="close" size={22} color="#000" />
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}>Create Post</Text>
+        <Text style={styles.headerText}>Create Post</Text>
         <TouchableOpacity onPress={createPost}>
-          <Text style={{ fontSize: 18, color: "#000", fontFamily: 'Poppins-Regular' }}>Post</Text>
+          <Text style={styles.postText}>Post</Text>
         </TouchableOpacity>
       </View>
 
+      {/* User Information Section */}
       <View activeOpacity={0.9} style={styles.content}>
         <Image style={styles.previewImg} source={{ uri }} />
         <Text style={styles.name}>{user?.name || "Loading..."}</Text>
       </View>
 
+      {/* Post Title Input */}
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="What's on your mind?"
@@ -145,6 +173,8 @@ const AddPostScreen = ({ navigation }) => {
           onChangeText={(text) => setTitle(text)}
         />
       </View>
+
+      {/* Media Swiper Section */}
       <Swiper
         containerStyle={styles.swiperContainer}
         activeDotColor="white"
@@ -152,37 +182,71 @@ const AddPostScreen = ({ navigation }) => {
         dotColor="silver"
         autoplay={true}
       >
-        {image.map((selectedImage, index) => (
-          <Image
-            key={index}
-            source={{ uri: selectedImage }}
-            style={styles.postImage}
-          />
+        {media.map((selectedMedia, index) => (
+          <View key={index}>
+            {selectedMedia.type === "image" && (
+              <Image source={{ uri: selectedMedia.url }} style={styles.postImage} />
+            )}
+            {selectedMedia.type === "video" && (
+              <View>
+                <Video
+                  ref={videoRef}
+                  source={{ uri: selectedMedia.url }}
+                  style={styles.postImage}
+                  resizeMode="cover"
+                  shouldPlay={false}
+                  isLooping
+                  onPlaybackStatusUpdate={(status) => {
+                    setVideoDuration(status.durationMillis);
+                    setCurrentPosition(status.positionMillis);
+                  }}
+                />
+                <TouchableOpacity style={styles.playButton} onPress={toggleVideoPlayback}>
+                  <MaterialIcons name={isVideoPlaying ? "pause" : "play-arrow"} size={40} color="white" />
+                </TouchableOpacity>
+                <View style={styles.videoControls}>
+                  <TouchableOpacity onPress={() => handleSeek(-10)}>
+                    <MaterialIcons name="replay-10" size={30} color="white" />
+                  </TouchableOpacity>
+                  <Text style={styles.videoDuration}>{formatDuration(currentPosition)}</Text>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={0}
+                    maximumValue={1}
+                    value={currentPosition / videoDuration}
+                    onValueChange={handleSliderChange}
+                  />
+                  <Text style={styles.videoDuration}>{formatDuration(videoDuration)}</Text>
+                  <TouchableOpacity onPress={() => handleSeek(10)}>
+                    <MaterialIcons name="forward-10" size={30} color="white" />
+                  </TouchableOpacity>
+                </View>
+                </View>
+            )}
+          </View>
         ))}
       </Swiper>
+
+      {/* Add Media Button */}
       <View style={styles.addButtonContainer}>
-      <TouchableOpacity
+        <TouchableOpacity
           style={styles.addButton}
           onPress={() => {
             Alert.alert(
               "Choose Image Source",
               "Select the image source for your post",
               [
-                {
-                  text: "Camera",
-                  onPress: () => handleModalOption("camera"),
-                },
-                {
-                  text: "Gallery",
-                  onPress: () => handleModalOption("gallery"),
-                },
+                { text: "Camera", onPress: () => pickMedia("camera") },
+                { text: "Gallery", onPress: () => pickMedia("gallery") },
               ],
             );
           }}
-        >          
-        <MaterialIcons name="add-a-photo" size={22} color="white" />
+        >
+          <MaterialIcons name="add-a-photo" size={22} color="white" />
         </TouchableOpacity>
       </View>
+
+      {/* Loading Modal */}
       <Modal transparent={true} animationType="fade" visible={loading}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
@@ -193,8 +257,6 @@ const AddPostScreen = ({ navigation }) => {
     </SafeAreaView>
   );
 };
-
-export default AddPostScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -328,4 +390,39 @@ const styles = StyleSheet.create({
   modalOptionText: {
     fontSize: 16,
   },
+  headerText: {
+    fontSize: 20,
+    fontFamily: 'Poppins-Medium',
+  },
+  postText:{
+    fontSize: 18,
+    color: "#000",
+    fontFamily: 'Poppins-Regular',
+  },
+  playButton: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: -20,
+    marginTop: -20,
+    zIndex: 2,
+  },
+  videoControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    position: 'absolute',
+    bottom: 20,
+    width: '95%',
+    right: 10,
+  },
+  videoDuration: {
+    color: "white",
+  },
+  slider: {
+    flex: 1,
+    marginHorizontal: 10,
+  },
 });
+
+export default AddPostScreen;

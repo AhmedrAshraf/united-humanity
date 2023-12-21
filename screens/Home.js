@@ -1,40 +1,35 @@
-import React, { useContext, useEffect, useState } from "react";
-import {
-  Text,
-  View,
-  Image,
-  Modal,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  RefreshControl,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import React, { useContext, useEffect, useState, useRef } from "react";
+import { Text, View, Image, Modal, StyleSheet, ScrollView, SafeAreaView, RefreshControl, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import moment from "moment";
-import {
-  query,
-  arrayUnion,
-  arrayRemove,
-  collection,
-  updateDoc,
-  orderBy,
-  getDocs,
-  where,
-  doc,
-  getDoc,
+import { 
+  query, 
+  arrayUnion, 
+  arrayRemove, 
+  collection, 
+  updateDoc, 
+  orderBy, 
+  getDocs, 
+  where, 
+  doc, 
+  getDoc 
 } from "firebase/firestore";
 import Swiper from "react-native-swiper";
+import Slider from '@react-native-community/slider';
+import { Video } from 'expo-av';
 import { database } from "../firebase";
 import { UserContext } from "../utils/UserContext";
 
 const Home = ({ navigation }) => {
+  const videoRef = useRef(null);
   const { user } = useContext(UserContext);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [following, setFollowing] = useState([]);
   const [likedPosts, setLikedPosts] = useState([]);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
 
   const uri = user?.profilePic || "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
@@ -45,12 +40,8 @@ const Home = ({ navigation }) => {
   const handleLikeButtonClick = async (postId) => {
     try {
       const postIndex = likedPosts.indexOf(postId);
-
-      if (postIndex !== -1) {
-        await updateLikes(postId, arrayRemove(user?.uid));
-      } else {
-        await updateLikes(postId, arrayUnion(user?.uid));
-      }
+      const updateType = postIndex !== -1 ? arrayRemove(user?.uid) : arrayUnion(user?.uid);
+      await updateLikes(postId, updateType);
     } catch (error) {
       console.error("Error updating likes:", error);
     }
@@ -58,7 +49,9 @@ const Home = ({ navigation }) => {
 
   const updateLikes = async (postId, updateType) => {
     await updateDoc(doc(database, "posts", postId), { likes: updateType });
-    setLikedPosts((prevLikedPosts) => (updateType === arrayRemove(user?.uid) ? prevLikedPosts.filter((id) => id !== postId) : [...prevLikedPosts, postId]));
+    setLikedPosts((prevLikedPosts) => (
+      updateType === arrayRemove(user?.uid) ? prevLikedPosts.filter((id) => id !== postId) : [...prevLikedPosts, postId]
+    ));
   };
 
   const fetchData = async () => {
@@ -73,9 +66,7 @@ const Home = ({ navigation }) => {
       }
 
       const allPostsQuery = query(collection(database, "posts"), orderBy("createdAt", "desc"));
-      const followingPostsQuery = following.length > 0
-        ? query(collection(database, "posts"), where("userId", "in", following), orderBy("createdAt", "desc"))
-        : null;
+      const followingPostsQuery = following.length > 0 ? query(collection(database, "posts"), where("userId", "in", following), orderBy("createdAt", "desc")) : null;
 
       const queryToUse = followingPostsQuery || allPostsQuery;
       const snap = await getDocs(queryToUse);
@@ -109,7 +100,9 @@ const Home = ({ navigation }) => {
       await updateDoc(userDocRef, { following: followingUpdate });
       await updateDoc(targetUserDocRef, { followers: followingUpdate });
 
-      setFollowing((prevFollowing) => (isFollowing ? prevFollowing.filter((id) => id !== stringPostUserId) : [...prevFollowing, stringPostUserId]));
+      setFollowing((prevFollowing) => (
+        isFollowing ? prevFollowing.filter((id) => id !== stringPostUserId) : [...prevFollowing, stringPostUserId]
+      ));
     } catch (error) {
       console.error("Error updating following:", error);
     }
@@ -155,23 +148,47 @@ const Home = ({ navigation }) => {
     return "Just now";
   };
 
+  const formatDuration = (milliseconds) => {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
+  const handleSeek = async (seconds) => {
+    const newPosition = Math.max(0, Math.min(currentPosition + seconds * 1000, videoDuration));
+    await videoRef.current.setPositionAsync(newPosition);
+    setCurrentPosition(newPosition);
+  };
+
+  const toggleVideoPlayback = () => {
+    if (isVideoPlaying) videoRef.current.pauseAsync();
+    else videoRef.current.playAsync();
+    setIsVideoPlaying(!isVideoPlaying);
+  };
+
+  const handleSliderChange = (value) => {
+    videoRef.current.setPositionAsync(value * videoDuration);
+    setCurrentPosition(value * videoDuration);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate("Profile", user)}>
           <Image style={styles.profilePic} source={{ uri }} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}>Home</Text>
+        <Text style={styles.headerText}>Home</Text>
         <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate("ProfileDetailScreen", user)}>
           <MaterialIcons name="settings" size={26} color="#000" />
         </TouchableOpacity>
       </View>
-      <ScrollView style={{ width: "100%" }} refreshControl={<RefreshControl refreshing={loading} />}>
+      <ScrollView style={styles.scrollView} refreshControl={<RefreshControl refreshing={loading} />}>
         {posts.map((post) => (
           <View style={styles.post} key={post.id}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={styles.postHeader}>
               <Image style={styles.previewImg} source={{ uri: post.creatorPic || uri }} />
-              <View style={{ marginLeft: 10 }}>
+              <View style={styles.headerInfo}>
                 <Text style={styles.name}>{post.creatorName}</Text>
                 <Text style={styles.postTime}>{post.createdAt && getRelativeTime(post.createdAt.toDate())}</Text>
               </View>
@@ -189,14 +206,53 @@ const Home = ({ navigation }) => {
               </TouchableOpacity>
             </View>
             <Swiper containerStyle={styles.swiperContainer} activeDotColor="white" showsButtons={false} dotColor="silver" autoplay={true}>
-              {Array.isArray(post.imageUrl) && post.imageUrl.map((url, index) => (
-                <Image key={index} source={{ uri: url }} style={styles.postImage} />
+              {Array.isArray(post.media) && post.media.map((selectedMedia, index) => (
+                <View key={index}>
+                  {selectedMedia.type === "image" && (
+                    <Image source={{ uri: selectedMedia.url }} style={styles.postImage} />
+                  )}
+                  {selectedMedia.type === "video" && (
+                    <View>
+                      <Video
+                        ref={videoRef}
+                        source={{ uri: selectedMedia.url }}
+                        style={styles.postImage}
+                        resizeMode="cover"
+                        shouldPlay={false}
+                        isLooping
+                        onPlaybackStatusUpdate={(status) => {
+                          setVideoDuration(status.durationMillis);
+                          setCurrentPosition(status.positionMillis);
+                        }}
+                      />
+                      <TouchableOpacity style={styles.playButton} onPress={toggleVideoPlayback}>
+                        <MaterialIcons name={isVideoPlaying ? "pause" : "play-arrow"} size={40} color="white" />
+                      </TouchableOpacity>
+                      <View style={styles.videoControls}>
+                        <TouchableOpacity onPress={() => handleSeek(-10)}>
+                          <MaterialIcons name="replay-10" size={30} color="white" />
+                        </TouchableOpacity>
+                        <Text style={styles.videoDuration}>{formatDuration(currentPosition)}</Text>
+                        <Slider
+                          style={styles.slider}
+                          minimumValue={0}
+                          maximumValue={1}
+                          value={currentPosition / videoDuration}
+                          onValueChange={handleSliderChange}
+                        />
+                        <Text style={styles.videoDuration}>{formatDuration(videoDuration)}</Text>
+                        <TouchableOpacity onPress={() => handleSeek(10)}>
+                          <MaterialIcons name="forward-10" size={30} color="white" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </View>
               ))}
             </Swiper>
             <TouchableOpacity
               style={styles.likeButton}
-              onPress={() => handleLikeButtonClick(post.id)}
-            >
+              onPress={() => handleLikeButtonClick(post.id)}>
               <FontAwesome
                 name={post.likes && post.likes.includes(user?.uid) ? "heart" : "heart-o"}
                 size={24}
@@ -206,7 +262,7 @@ const Home = ({ navigation }) => {
             <Text style={styles.likeCount}>
               {post.likes ? `${post.likes.length} Likes` : '0 Likes'}
             </Text>
-            <Text style={{ fontSize: 16, marginLeft: 10, fontFamily: 'Poppins-Regular' }}>{post.title}</Text>
+            <Text style={styles.postTitle}>{post.title}</Text>
           </View>
         ))}
       </ScrollView>
@@ -253,7 +309,14 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
       },
     }),
-  },  
+  },
+  headerText: {
+    fontSize: 20,
+    fontFamily: 'Poppins-Medium',
+  },
+  scrollView: {
+    width: "100%",
+  },
   post: {
     marginTop: 25,
     padding: 10,
@@ -268,27 +331,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "space-between",
   },
+  postHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   previewImg: {
     width: 40,
     height: 40,
     marginLeft: 10,
     borderRadius: 10,
     backgroundColor: "gainsboro",
-  },
-  profilePic: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "gainsboro",
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "600",
-    fontFamily: 'Outfit-Regular',
-  },
-  postTime: {
-    fontSize: 14,
-    color: "gray",
   },
   postImage: {
     height: 340,
@@ -301,6 +353,18 @@ const styles = StyleSheet.create({
   swiperContainer: {
     height: 360,
     width: "100%",
+  },
+  headerInfo: {
+    marginLeft: 10,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: "600",
+    fontFamily: 'Outfit-Regular',
+  },
+  postTime: {
+    fontSize: 14,
+    color: "gray",
   },
   addButtonContainer: {
     position: "absolute",
@@ -354,5 +418,29 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "black",
     fontFamily: 'Poppins-Regular'
+  },
+  playButton: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: -20,
+    marginTop: -20,
+    zIndex: 2,
+  },
+  videoControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    position: 'absolute',
+    bottom: 20,
+    width: '95%',
+    right: 10,
+  },
+  videoDuration: {
+    color: "white",
+  },
+  slider: {
+    flex: 1,
+    marginHorizontal: 10,
   },
 });

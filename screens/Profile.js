@@ -1,15 +1,19 @@
-import React, { useContext, useEffect, useState } from "react";
-import { FontAwesome, Feather, Entypo } from "@expo/vector-icons";
+import React, { useContext, useEffect, useState, useRef } from "react";
+import { FontAwesome, Feather, Entypo, MaterialIcons } from "@expo/vector-icons";
 import { Text, View, Image, StyleSheet, ScrollView, SafeAreaView, RefreshControl, TouchableOpacity } from "react-native";
 import { doc, getDoc, query, collection, arrayUnion, onSnapshot, arrayRemove, updateDoc, orderBy, where } from "firebase/firestore";
 import { Button } from "react-native-paper";
 import { database } from "../firebase";
 import moment from "moment";
+import { Video } from 'expo-av';
 import Swiper from "react-native-swiper";
 import { UserContext } from "../utils/UserContext";
+import Slider from '@react-native-community/slider';
 
 const Profile = ({ navigation }) => {
   const { uid } = useContext(UserContext);
+  const videoRef = useRef(null);
+
   const [user, setUser] = useState();
   const [posts, setPosts] = useState([]);
   const [postCount, setPostCount] = useState(0);
@@ -17,6 +21,9 @@ const Profile = ({ navigation }) => {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [isCurrentUserProfile, setIsCurrentUserProfile] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
 
   useEffect(() => {
     getUser();
@@ -84,6 +91,30 @@ const Profile = ({ navigation }) => {
     }
   };
 
+  const formatDuration = (milliseconds) => {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+  };
+
+  const handleSeek = async (seconds) => {
+    const newPosition = Math.max(0, Math.min(currentPosition + seconds * 1000, videoDuration));
+    await videoRef.current.setPositionAsync(newPosition);
+    setCurrentPosition(newPosition);
+  };
+
+  const toggleVideoPlayback = () => {
+    if (isVideoPlaying) videoRef.current.pauseAsync();
+    else videoRef.current.playAsync();
+    setIsVideoPlaying(!isVideoPlaying);
+  };
+
+  const handleSliderChange = (value) => {
+    videoRef.current.setPositionAsync(value * videoDuration);
+    setCurrentPosition(value * videoDuration);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -147,8 +178,48 @@ const Profile = ({ navigation }) => {
               </View>
             </View>
             <Swiper containerStyle={styles.swiperContainer} activeDotColor="white" showsButtons={false} dotColor="silver" autoplay={true}>
-              {Array.isArray(post?.imageUrl) && post?.imageUrl?.map((url, index) => (
-                <Image key={index} source={{ uri: url }} style={styles.postImage} />
+              {Array.isArray(post.media) && post.media.map((selectedMedia, index) => (
+                <View key={index}>
+                  {selectedMedia.type === "image" && (
+                    <Image source={{ uri: selectedMedia.url }} style={styles.postImage} />
+                  )}
+                  {selectedMedia.type === "video" && (
+                    <View>
+                      <Video
+                        ref={videoRef}
+                        source={{ uri: selectedMedia.url }}
+                        style={styles.postImage}
+                        resizeMode="cover"
+                        shouldPlay={false}
+                        isLooping
+                        onPlaybackStatusUpdate={(status) => {
+                          setVideoDuration(status.durationMillis);
+                          setCurrentPosition(status.positionMillis);
+                        }}
+                      />
+                      <TouchableOpacity style={styles.playButton} onPress={toggleVideoPlayback}>
+                        <MaterialIcons name={isVideoPlaying ? "pause" : "play-arrow"} size={40} color="white" />
+                      </TouchableOpacity>
+                      <View style={styles.videoControls}>
+                        <TouchableOpacity onPress={() => handleSeek(-10)}>
+                          <MaterialIcons name="replay-10" size={30} color="white" />
+                        </TouchableOpacity>
+                        <Text style={styles.videoDuration}>{formatDuration(currentPosition)}</Text>
+                        <Slider
+                          style={styles.slider}
+                          minimumValue={0}
+                          maximumValue={1}
+                          value={currentPosition / videoDuration}
+                          onValueChange={handleSliderChange}
+                        />
+                        <Text style={styles.videoDuration}>{formatDuration(videoDuration)}</Text>
+                        <TouchableOpacity onPress={() => handleSeek(10)}>
+                          <MaterialIcons name="forward-10" size={30} color="white" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </View>
               ))}
             </Swiper>
             <TouchableOpacity style={styles.likeButton} onPress={() => handleLikeButtonClick(post.id)}>
@@ -340,5 +411,29 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "black",
     fontFamily: 'Poppins-Regular'
+  },
+  playButton: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginLeft: -20,
+    marginTop: -20,
+    zIndex: 2,
+  },
+  videoControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    position: 'absolute',
+    bottom: 20,
+    width: '95%',
+    right: 10,
+  },
+  videoDuration: {
+    color: "white",
+  },
+  slider: {
+    flex: 1,
+    marginHorizontal: 10,
   },
 });
