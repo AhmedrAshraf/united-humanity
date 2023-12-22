@@ -25,7 +25,7 @@ const Home = ({ navigation }) => {
   const { user } = useContext(UserContext);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [following, setFollowing] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
   const [likedPosts, setLikedPosts] = useState([]);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
@@ -34,8 +34,8 @@ const Home = ({ navigation }) => {
   const uri = user?.profilePic || "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   useEffect(() => {
-    fetchData();
-  }, [user, following.length, likedPosts]);
+    fetchPosts();
+  }, [user, followingList.length, likedPosts]);
 
   const handleLikeButtonClick = async (postId) => {
     try {
@@ -54,32 +54,55 @@ const Home = ({ navigation }) => {
     ));
   };
 
-  const fetchData = async () => {
+  const fetchPosts = async (pageSize = 5) => {
     try {
       setLoading(true);
-
-      if (!following.length && user?.uid) {
-        const userDocRef = doc(collection(database, "users"), user.uid);
-        const userDoc = await getDoc(userDocRef);
-        const updatedFollowing = (userDoc.data()?.following || []).map(String);
-        setFollowing(updatedFollowing);
+  
+      // Fetch user's following list
+      if (!followingList.length && user?.uid) {
+        const userDocumentRef = doc(collection(database, "users"), user.uid);
+        const userDocument = await getDoc(userDocumentRef);
+        const updatedFollowingList = (userDocument.data()?.followingList || []).map(String);
+        setFollowingList(updatedFollowingList);
       }
-
+  
+      // Query for posts
       const allPostsQuery = query(collection(database, "posts"), orderBy("createdAt", "desc"));
-      const followingPostsQuery = following.length > 0 ? query(collection(database, "posts"), where("userId", "in", following), orderBy("createdAt", "desc")) : null;
-
+      const followingPostsQuery = followingList.length > 0
+        ? query(collection(database, "posts"), where("userId", "in", followingList), orderBy("createdAt", "desc"))
+        : null;
+  
       const queryToUse = followingPostsQuery || allPostsQuery;
-      const snap = await getDocs(queryToUse);
-      const postsData = snap.docs.map((doc) => processPost(doc));
-
-      const followingPosts = await Promise.all(snap.docs.map(async (doc) => await processPost(doc)));
+  
+      // Fetch posts data with pagination
+      const postsSnapshot = await getDocs(queryToUse);
+      const postsData = postsSnapshot.docs.map((postDoc) => processPost(postDoc));
+      const limitedPostsData = postsData.slice(0, pageSize);
+  
+      // Separate all posts and following posts
       const allPostsSnapshot = await getDocs(allPostsQuery);
       const allPosts = await Promise.all(allPostsSnapshot.docs.map((doc) => processPost(doc)));
-
-      const uniquePostsSet = new Set(allPosts.map((post) => post.id));
-      const uniqueFollowingPosts = followingPosts.filter((post) => !uniquePostsSet.has(post.id));
-
-      setPosts(uniqueFollowingPosts.concat(allPosts).filter((post) => post.userId !== user?.uid));
+  
+      const followingPostsSnapshot = followingPostsQuery ? await getDocs(followingPostsQuery) : null;
+      const followingPosts = followingPostsSnapshot ? await Promise.all(followingPostsSnapshot.docs.map((doc) => processPost(doc))) : [];
+  
+      // Combine and sort posts
+      const combinedPosts = followingPosts.concat(allPosts).filter((post) => post.userId !== user?.uid);
+  
+      // Sort posts based on dynamic priority
+      const sortedPosts = combinedPosts.sort((postA, postB) => {
+        const isUserAFollowed = followingList.includes(postA.userId);
+        const isUserBFollowed = followingList.includes(postB.userId);
+  
+        if (isUserAFollowed === isUserBFollowed) {
+          return 0;
+        }
+  
+        return isUserAFollowed ? -1 : 1;
+      });
+  
+      // Set sorted posts and update loading state
+      setPosts(sortedPosts);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -94,13 +117,13 @@ const Home = ({ navigation }) => {
       const userDoc = await getDoc(userDocRef);
       const currentUserData = userDoc.data();
       const stringPostUserId = postUserId.toString();
-      const isFollowing = (currentUserData.following || []).includes(stringPostUserId);
+      const isFollowing = (currentUserData.followingList || []).includes(stringPostUserId);
 
       const followingUpdate = isFollowing ? arrayRemove(stringPostUserId) : arrayUnion(stringPostUserId);
-      await updateDoc(userDocRef, { following: followingUpdate });
+      await updateDoc(userDocRef, { followingList: followingUpdate });
       await updateDoc(targetUserDocRef, { followers: followingUpdate });
 
-      setFollowing((prevFollowing) => (
+      setFollowingList((prevFollowing) => (
         isFollowing ? prevFollowing.filter((id) => id !== stringPostUserId) : [...prevFollowing, stringPostUserId]
       ));
     } catch (error) {
@@ -184,8 +207,8 @@ const Home = ({ navigation }) => {
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.scrollView} refreshControl={<RefreshControl refreshing={loading} />}>
-        {posts.map((post) => (
-          <View style={styles.post} key={post.id}>
+        {posts.map((post, index) => (
+          <View style={styles.post} key={`${post.id}_${index}`}>
             <View style={styles.postHeader}>
               <Image style={styles.previewImg} source={{ uri: post.creatorPic || uri }} />
               <View style={styles.headerInfo}>
@@ -196,12 +219,12 @@ const Home = ({ navigation }) => {
                 style={[
                   styles.followerButton,
                   {
-                    backgroundColor: following.includes(post.userId) ? "#000" : "#01AEF0",
+                    backgroundColor: followingList.includes(post.userId) ? "#000" : "#01AEF0",
                   },
                 ]}
                 onPress={() => handleFollowerButtonClick(post.userId)}>
                 <Text style={styles.followerButtonText}>
-                  {following.includes(post.userId) ? "Following" : "Follow"}
+                  {followingList.includes(post.userId) ? "Following" : "Follow"}
                 </Text>
               </TouchableOpacity>
             </View>
