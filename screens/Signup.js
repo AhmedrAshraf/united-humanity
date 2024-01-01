@@ -25,7 +25,7 @@ import React, { useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CreateAdminScreen = ({ navigation }) => {
-  const { setUid } = useContext(UserContext);
+  const { setUid, setUser } = useContext(UserContext);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -62,8 +62,6 @@ const CreateAdminScreen = ({ navigation }) => {
         alert("Failed to get push token for push notification!");
         return;
       }
-      // Learn more about projectId:
-      // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
       token = (
         await Notifications.getExpoPushTokenAsync({
           projectId: "fbc38cbf-12b5-4fb6-bc5f-481900e84d07",
@@ -84,23 +82,26 @@ const CreateAdminScreen = ({ navigation }) => {
       const username = email.split("@")[0] + Math.floor(Math.random() * 1000);
       createUserWithEmailAndPassword(auth, email, password)
         .then(async (userInfo) => {
-          AsyncStorage.setItem("uid", userInfo.user.uid);
           if (userInfo?.user?.uid) {
-            setUid(userInfo.user.uid);
-            await setDoc(doc(database, "users", userInfo.user.uid), {
-              createdAt: Date.now(),
-              uid: userInfo.user.uid,
+            let usr = {
               email,
               name,
               username,
-              profilePic: '',
+              profilePic: "",
+              createdAt: Date.now(),
+              uid: userInfo.user.uid,
               token: pushToken || "",
-            });
-            navigation.navigate("ProfileDetailScreen", { uid: userInfo.user.uid });
+            };
+            setUser(usr);
+            setUid(userInfo.user.uid);
+            await AsyncStorage.setItem("user", JSON.stringify(usr));
+            await AsyncStorage.setItem("uid", userInfo.user.uid);
+            await setDoc(doc(database, "users", userInfo.user.uid), usr);
             setName("");
             setEmail("");
             setPassword("");
             setLoading(false);
+            navigation.navigate("ProfileDetailScreen");
             console.log("Admin Successfully Registered!");
           } else {
             setLoading(false);
@@ -199,7 +200,7 @@ const CreateAdminScreen = ({ navigation }) => {
             uppercase={false}
             disabled={loading}
             style={Platform.isPad ? [styles.but, styles.ph] : styles.but}
-            labelStyle={{fontFamily: 'Poppins-Medium'}}
+            labelStyle={{ fontFamily: "Poppins-Medium" }}
             onPress={handleSubmit}
           >
             Create Account
@@ -238,13 +239,13 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 16,
     marginBottom: 30,
-    fontFamily: 'Poppins-Regular'
+    fontFamily: "Poppins-Regular",
   },
   appName: {
     fontSize: 24,
     marginBottom: 60,
     marginTop: 10,
-    fontFamily: 'Poppins-Medium'
+    fontFamily: "Poppins-Medium",
   },
   input: {
     fontSize: 15,
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     shadowColor: "#470000",
     shadowOffset: { width: 0, height: 3 },
-    fontFamily: 'Poppins-Medium'
+    fontFamily: "Poppins-Medium",
   },
   inputBox: {
     width: Dimensions.get("window").width,
@@ -277,7 +278,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginBottom: 5,
     color: "#2C3A4B",
-    fontFamily: 'Poppins-Regular'
+    fontFamily: "Poppins-Regular",
   },
   but: {
     width: "90%",
@@ -389,7 +390,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   txt: {
-    fontFamily: 'Poppins-Regular'
-
+    fontFamily: "Poppins-Regular",
   },
 });

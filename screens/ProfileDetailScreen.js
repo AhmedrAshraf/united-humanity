@@ -20,9 +20,8 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { launchCameraAsync, launchImageLibraryAsync } from 'expo-image-picker';
 import { UserContext } from "../utils/UserContext";
 
-const ProfileDetailScreen = ({ route, navigation }) => {
-  const { user, setUser } = useContext(UserContext);
-  const { uid } = route.params;
+const ProfileDetailScreen = ({ navigation }) => {
+  const { user, setUser, uid } = useContext(UserContext);
 
   const [users, setUsers] = useState();
   const [image, setImage] = useState();
