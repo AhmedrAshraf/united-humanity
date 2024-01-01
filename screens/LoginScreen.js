@@ -11,21 +11,21 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
 } from "react-native";
-import { auth } from "../firebase";
 import * as Device from "expo-device";
 import logo from "../assets/logo.png";
 import { StatusBar } from "expo-status-bar";
-import { doc, updateDoc } from "firebase/database";
+import { auth, database } from "../firebase";
 import { UserContext } from "../utils/UserContext";
 import * as Notifications from "expo-notifications";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { doc, getDocs, updateDoc } from "firebase/firestore";
 import React, { useContext, useState, useEffect } from "react";
 import { ActivityIndicator, Button } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = ({ navigation }) => {
-  const { setUid } = useContext(UserContext);
+  const { setUid, setUser } = useContext(UserContext);
 
   const [psw, setPsw] = useState("");
   const [email, setEmail] = useState("");
@@ -65,14 +65,11 @@ const LoginScreen = ({ navigation }) => {
         alert("Failed to get push token for push notification!");
         return;
       }
-      // Learn more about projectId:
-      // https://docs.expo.dev/push-notifications/push-notifications-setup/#configure-projectid
       token = (
         await Notifications.getExpoPushTokenAsync({
           projectId: "fbc38cbf-12b5-4fb6-bc5f-481900e84d07",
         })
       ).data;
-      console.log(token);
     } else {
       alert("Must use physical device for Push Notifications");
     }
@@ -85,11 +82,16 @@ const LoginScreen = ({ navigation }) => {
       setLoading(true);
       signInWithEmailAndPassword(auth, email, psw)
         .then(async (user) => {
-          await AsyncStorage.setItem("uid", user?.user?.uid);
           setUid(user?.user?.uid);
+          setUser(user?.user?.uid);
+          let usr = await getDocs(doc(database, "users", user?.user?.uid));
+          await AsyncStorage.setItem("uid", user?.user?.uid);
           if (pushToken) {
             updateDoc(doc(auth, "users", user.user?.uid), { token: pushToken });
           }
+          let usrr = JSON.stringify({ ...usr, token: pushToken });
+          setUser(usrr);
+          await AsyncStorage.setItem("user", usrr);
         })
         .catch((err) => {
           alert(err.message);
@@ -172,7 +174,7 @@ const LoginScreen = ({ navigation }) => {
             disabled={loading}
             style={styles.but}
             onPress={handleLogin}
-            labelStyle={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}
+            labelStyle={{ fontSize: 20, fontFamily: "Poppins-Medium" }}
           >
             Sign In
           </Button>
@@ -224,13 +226,13 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 16,
     marginBottom: 40,
-    fontFamily: 'Poppins-Regular'
+    fontFamily: "Poppins-Regular",
   },
   appName: {
     fontSize: 24,
     marginTop: 10,
     marginBottom: 60,
-    fontFamily: 'Poppins-Medium'
+    fontFamily: "Poppins-Medium",
   },
   but: {
     width: "90%",
@@ -272,7 +274,7 @@ const styles = StyleSheet.create({
     shadowColor: "#470000",
     backgroundColor: "white",
     shadowOffset: { width: 0, height: 3 },
-    fontFamily: 'Poppins-Medium'
+    fontFamily: "Poppins-Medium",
   },
   inputBox: {
     paddingHorizontal: "5%",
@@ -285,6 +287,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   txt: {
-    fontFamily: 'Poppins-Regular'
+    fontFamily: "Poppins-Regular",
   },
 });

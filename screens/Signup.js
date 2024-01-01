@@ -84,8 +84,8 @@ const CreateAdminScreen = ({ navigation }) => {
         .then(async (userInfo) => {
           if (userInfo?.user?.uid) {
             let usr = {
-              email,
               name,
+              email,
               username,
               profilePic: "",
               createdAt: Date.now(),
