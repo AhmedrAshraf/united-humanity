@@ -50,7 +50,7 @@ const Home = ({ navigation }) => {
 
   useEffect(() => {
     fetchPosts();
-  }, [user, followingList.length, likedPosts]);
+  }, [followingList.length, likedPosts]);
 
   const handleLikeButtonClick = async (postId) => {
     try {
