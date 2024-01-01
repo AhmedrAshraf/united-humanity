@@ -1,4 +1,3 @@
-import React, { useEffect, useState, useContext } from "react";
 import {
   Text,
   View,
@@ -11,14 +10,15 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
-import { database, storage } from "../firebase";
 import { Button } from "react-native-paper";
+import { database, storage } from "../firebase";
+import * as ImagePicker from "expo-image-picker";
+import { UserContext } from "../utils/UserContext";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useState, useContext } from "react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { launchCameraAsync, launchImageLibraryAsync } from 'expo-image-picker';
-import { UserContext } from "../utils/UserContext";
+import { launchCameraAsync, launchImageLibraryAsync } from "expo-image-picker";
 
 const ProfileDetailScreen = ({ navigation }) => {
   const { user, setUser, uid } = useContext(UserContext);
@@ -87,11 +87,17 @@ const ProfileDetailScreen = ({ navigation }) => {
       console.log("🚀 ~ file: AddPostScreen.js:63 ~ handleUpload ~ img:", img);
       let res = await fetch(img);
       let blob = await res.blob();
-      console.log("🚀 ~ file: AddPostScreen.js:66 ~ handleUpload ~ blob:", blob);
+      console.log(
+        "🚀 ~ file: AddPostScreen.js:66 ~ handleUpload ~ blob:",
+        blob
+      );
       let nam = Date.now().toString();
       console.log("🚀 ~ file: AddPostScreen.js:67 ~ handleUpload ~ nam:", nam);
       const storeRef = ref(storage, nam);
-      console.log("🚀 ~ file: AddPostScreen.js:69 ~ handleUpload ~ storeRef:", storeRef);
+      console.log(
+        "🚀 ~ file: AddPostScreen.js:69 ~ handleUpload ~ storeRef:",
+        storeRef
+      );
       await uploadBytes(storeRef, blob);
       setLoading(false);
       const url = await getDownloadURL(storeRef);
@@ -120,7 +126,11 @@ const ProfileDetailScreen = ({ navigation }) => {
 
       setLoading(false);
       alert("Changes saved successfully!");
-      setUser((prevUser) => ({ ...prevUser, username: user.username, profilePic: image }));
+      setUser((prevUser) => ({
+        ...prevUser,
+        username: user.username,
+        profilePic: image,
+      }));
       navigation.navigate("Home");
     } catch (err) {
       alert(err);
@@ -136,7 +146,9 @@ const ProfileDetailScreen = ({ navigation }) => {
           style={styles.arrow}
           onPress={() => navigation.goBack()}
         />
-        <Text style={{ fontSize: 20, fontFamily: 'Poppins-Medium' }}>Profile</Text>
+        <Text style={{ fontSize: 20, fontFamily: "Poppins-Medium" }}>
+          Profile
+        </Text>
         <TouchableOpacity activeOpacity={0.8}>
           <MaterialIcons name={"logout"} size={26} color="#000" />
         </TouchableOpacity>
@@ -186,20 +198,24 @@ const ProfileDetailScreen = ({ navigation }) => {
       <Modal
         transparent={true}
         animationType="fade"
-        visible={isImagePickerVisible}>
+        visible={isImagePickerVisible}
+      >
         <TouchableOpacity
           style={styles.imgOptionModal}
           activeOpacity={1}
-          onPress={handleOverlayPress}>
+          onPress={handleOverlayPress}
+        >
           <View style={styles.modalOptionContainer}>
             <TouchableOpacity
               style={styles.modalOption}
-              onPress={() => handleModalOption("camera")}>
+              onPress={() => handleModalOption("camera")}
+            >
               <Text style={styles.modalOptionText}>Camera</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalOption}
-              onPress={() => handleModalOption("gallery")}>
+              onPress={() => handleModalOption("gallery")}
+            >
               <Text style={styles.modalOptionText}>Gallery</Text>
             </TouchableOpacity>
           </View>
@@ -210,7 +226,7 @@ const ProfileDetailScreen = ({ navigation }) => {
         mode="contained"
         uppercase={false}
         style={styles.but}
-        labelStyle={{fontFamily: 'Poppins-Medium'}}
+        labelStyle={{ fontFamily: "Poppins-Medium" }}
         onPress={saveChanges}
       >
         Save
@@ -231,7 +247,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 20,
     alignItems: "center",
-    justifyContent: 'center',
+    justifyContent: "center",
     flexDirection: "row",
     paddingHorizontal: 25,
     backgroundColor: "white",
@@ -295,7 +311,7 @@ const styles = StyleSheet.create({
     shadowColor: "#470000",
     backgroundColor: "white",
     shadowOffset: { width: 0, height: 3 },
-    fontFamily: 'Poppins-Medium'
+    fontFamily: "Poppins-Medium",
   },
   label: {
     opacity: 0.8,
@@ -303,7 +319,7 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     marginBottom: 10,
     color: "#2C3A4B",
-    fontFamily: 'Poppins-Regular'
+    fontFamily: "Poppins-Regular",
   },
   inputBox: {
     width: Dimensions.get("window").width,

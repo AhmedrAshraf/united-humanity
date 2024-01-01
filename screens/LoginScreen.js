@@ -19,7 +19,7 @@ import { UserContext } from "../utils/UserContext";
 import * as Notifications from "expo-notifications";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { doc, getDocs, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import React, { useContext, useState, useEffect } from "react";
 import { ActivityIndicator, Button } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -84,7 +84,7 @@ const LoginScreen = ({ navigation }) => {
         .then(async (user) => {
           setUid(user?.user?.uid);
           setUser(user?.user?.uid);
-          let usr = await getDocs(doc(database, "users", user?.user?.uid));
+          let usr = await getDoc(doc(database, "users", user?.user?.uid));
           await AsyncStorage.setItem("uid", user?.user?.uid);
           if (pushToken) {
             updateDoc(doc(auth, "users", user.user?.uid), { token: pushToken });

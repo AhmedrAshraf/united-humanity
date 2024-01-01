@@ -1,37 +1,52 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
-import { Text, View, Image, Modal, StyleSheet, ScrollView, SafeAreaView, RefreshControl, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import moment from "moment";
-import { 
-  query, 
-  arrayUnion, 
-  arrayRemove, 
-  collection, 
-  updateDoc, 
-  orderBy, 
-  getDocs, 
-  where, 
-  doc, 
-  getDoc 
+import {
+  Text,
+  View,
+  Image,
+  Modal,
+  Platform,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  RefreshControl,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import {
+  doc,
+  where,
+  query,
+  getDoc,
+  orderBy,
+  getDocs,
+  updateDoc,
+  collection,
+  arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
-import Swiper from "react-native-swiper";
-import Slider from '@react-native-community/slider';
-import { Video } from 'expo-av';
+import moment from "moment";
+import { Video } from "expo-av";
 import { database } from "../firebase";
+import Swiper from "react-native-swiper";
 import { UserContext } from "../utils/UserContext";
+import Slider from "@react-native-community/slider";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import React, { useContext, useEffect, useState, useRef } from "react";
 
 const Home = ({ navigation }) => {
-  const videoRef = useRef(null);
   const { user } = useContext(UserContext);
+
+  const videoRef = useRef(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [followingList, setFollowingList] = useState([]);
   const [likedPosts, setLikedPosts] = useState([]);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [currentPosition, setCurrentPosition] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
+  const [followingList, setFollowingList] = useState([]);
+  const [currentPosition, setCurrentPosition] = useState(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-  const uri = user?.profilePic || "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
+  const uri =
+    user?.profilePic ||
+    "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
 
   useEffect(() => {
     fetchPosts();
@@ -40,7 +55,8 @@ const Home = ({ navigation }) => {
   const handleLikeButtonClick = async (postId) => {
     try {
       const postIndex = likedPosts.indexOf(postId);
-      const updateType = postIndex !== -1 ? arrayRemove(user?.uid) : arrayUnion(user?.uid);
+      const updateType =
+        postIndex !== -1 ? arrayRemove(user?.uid) : arrayUnion(user?.uid);
       await updateLikes(postId, updateType);
     } catch (error) {
       console.error("Error updating likes:", error);
@@ -49,58 +65,82 @@ const Home = ({ navigation }) => {
 
   const updateLikes = async (postId, updateType) => {
     await updateDoc(doc(database, "posts", postId), { likes: updateType });
-    setLikedPosts((prevLikedPosts) => (
-      updateType === arrayRemove(user?.uid) ? prevLikedPosts.filter((id) => id !== postId) : [...prevLikedPosts, postId]
-    ));
+    setLikedPosts((prevLikedPosts) =>
+      updateType === arrayRemove(user?.uid)
+        ? prevLikedPosts.filter((id) => id !== postId)
+        : [...prevLikedPosts, postId]
+    );
   };
 
   const fetchPosts = async (pageSize = 5) => {
     try {
       setLoading(true);
-  
+
       // Fetch user's following list
       if (!followingList.length && user?.uid) {
         const userDocumentRef = doc(collection(database, "users"), user.uid);
         const userDocument = await getDoc(userDocumentRef);
-        const updatedFollowingList = (userDocument.data()?.followingList || []).map(String);
+        const updatedFollowingList = (
+          userDocument.data()?.followingList || []
+        ).map(String);
         setFollowingList(updatedFollowingList);
       }
-  
+
       // Query for posts
-      const allPostsQuery = query(collection(database, "posts"), orderBy("createdAt", "desc"));
-      const followingPostsQuery = followingList.length > 0
-        ? query(collection(database, "posts"), where("userId", "in", followingList), orderBy("createdAt", "desc"))
-        : null;
-  
+      const allPostsQuery = query(
+        collection(database, "posts"),
+        orderBy("createdAt", "desc")
+      );
+      const followingPostsQuery =
+        followingList.length > 0
+          ? query(
+              collection(database, "posts"),
+              where("userId", "in", followingList),
+              orderBy("createdAt", "desc")
+            )
+          : null;
+
       const queryToUse = followingPostsQuery || allPostsQuery;
-  
+
       // Fetch posts data with pagination
       const postsSnapshot = await getDocs(queryToUse);
-      const postsData = postsSnapshot.docs.map((postDoc) => processPost(postDoc));
+      const postsData = postsSnapshot.docs.map((postDoc) =>
+        processPost(postDoc)
+      );
       const limitedPostsData = postsData.slice(0, pageSize);
-  
+
       // Separate all posts and following posts
       const allPostsSnapshot = await getDocs(allPostsQuery);
-      const allPosts = await Promise.all(allPostsSnapshot.docs.map((doc) => processPost(doc)));
-  
-      const followingPostsSnapshot = followingPostsQuery ? await getDocs(followingPostsQuery) : null;
-      const followingPosts = followingPostsSnapshot ? await Promise.all(followingPostsSnapshot.docs.map((doc) => processPost(doc))) : [];
-  
+      const allPosts = await Promise.all(
+        allPostsSnapshot.docs.map((doc) => processPost(doc))
+      );
+
+      const followingPostsSnapshot = followingPostsQuery
+        ? await getDocs(followingPostsQuery)
+        : null;
+      const followingPosts = followingPostsSnapshot
+        ? await Promise.all(
+            followingPostsSnapshot.docs.map((doc) => processPost(doc))
+          )
+        : [];
+
       // Combine and sort posts
-      const combinedPosts = followingPosts.concat(allPosts).filter((post) => post.userId !== user?.uid);
-  
+      const combinedPosts = followingPosts
+        .concat(allPosts)
+        .filter((post) => post.userId !== user?.uid);
+
       // Sort posts based on dynamic priority
       const sortedPosts = combinedPosts.sort((postA, postB) => {
         const isUserAFollowed = followingList.includes(postA.userId);
         const isUserBFollowed = followingList.includes(postB.userId);
-  
+
         if (isUserAFollowed === isUserBFollowed) {
           return 0;
         }
-  
+
         return isUserAFollowed ? -1 : 1;
       });
-  
+
       // Set sorted posts and update loading state
       setPosts(sortedPosts);
       setLoading(false);
@@ -117,15 +157,21 @@ const Home = ({ navigation }) => {
       const userDoc = await getDoc(userDocRef);
       const currentUserData = userDoc.data();
       const stringPostUserId = postUserId.toString();
-      const isFollowing = (currentUserData.followingList || []).includes(stringPostUserId);
+      const isFollowing = (currentUserData.followingList || []).includes(
+        stringPostUserId
+      );
 
-      const followingUpdate = isFollowing ? arrayRemove(stringPostUserId) : arrayUnion(stringPostUserId);
+      const followingUpdate = isFollowing
+        ? arrayRemove(stringPostUserId)
+        : arrayUnion(stringPostUserId);
       await updateDoc(userDocRef, { followingList: followingUpdate });
       await updateDoc(targetUserDocRef, { followers: followingUpdate });
 
-      setFollowingList((prevFollowing) => (
-        isFollowing ? prevFollowing.filter((id) => id !== stringPostUserId) : [...prevFollowing, stringPostUserId]
-      ));
+      setFollowingList((prevFollowing) =>
+        isFollowing
+          ? prevFollowing.filter((id) => id !== stringPostUserId)
+          : [...prevFollowing, stringPostUserId]
+      );
     } catch (error) {
       console.error("Error updating following:", error);
     }
@@ -134,13 +180,14 @@ const Home = ({ navigation }) => {
   const processPost = async (doc) => {
     try {
       const postData = doc.data();
-      const userData = (await getDocs(query(collection(database, "users"), where("uid", "==", postData.userId))))?.docs[0]?.data() || {};
+      const userData = await getDoc(doc(database, "users", postData.userId));
 
       return {
         ...postData,
         id: doc.id,
         creatorName: postData.creatorName || userData?.username,
-        creatorPic: userData?.profilePic || "https://default-profile-pic-url.com",
+        creatorPic:
+          userData?.profilePic || "https://default-profile-pic-url.com",
         likes: postData.likes || [],
       };
     } catch (error) {
@@ -175,11 +222,14 @@ const Home = ({ navigation }) => {
     const seconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
   };
 
   const handleSeek = async (seconds) => {
-    const newPosition = Math.max(0, Math.min(currentPosition + seconds * 1000, videoDuration));
+    const newPosition = Math.max(
+      0,
+      Math.min(currentPosition + seconds * 1000, videoDuration)
+    );
     await videoRef.current.setPositionAsync(newPosition);
     setCurrentPosition(newPosition);
   };
@@ -198,93 +248,159 @@ const Home = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate("Profile", user)}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate("Profile")}
+        >
           <Image style={styles.profilePic} source={{ uri }} />
         </TouchableOpacity>
         <Text style={styles.headerText}>Home</Text>
-        <TouchableOpacity activeOpacity={0.8} onPress={() => navigation.navigate("ProfileDetailScreen", user)}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate("ProfileDetailScreen")}
+        >
           <MaterialIcons name="settings" size={26} color="#000" />
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.scrollView} refreshControl={<RefreshControl refreshing={loading} />}>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={<RefreshControl refreshing={loading} />}
+      >
         {posts.map((post, index) => (
           <View style={styles.post} key={`${post.id}_${index}`}>
             <View style={styles.postHeader}>
-              <Image style={styles.previewImg} source={{ uri: post.creatorPic || uri }} />
+              <Image
+                style={styles.previewImg}
+                source={{ uri: post.creatorPic || uri }}
+              />
               <View style={styles.headerInfo}>
                 <Text style={styles.name}>{post.creatorName}</Text>
-                <Text style={styles.postTime}>{post.createdAt && getRelativeTime(post.createdAt.toDate())}</Text>
+                <Text style={styles.postTime}>
+                  {post.createdAt && getRelativeTime(post.createdAt.toDate())}
+                </Text>
               </View>
               <TouchableOpacity
                 style={[
                   styles.followerButton,
                   {
-                    backgroundColor: followingList.includes(post.userId) ? "#000" : "#01AEF0",
+                    backgroundColor: followingList.includes(post.userId)
+                      ? "#000"
+                      : "#01AEF0",
                   },
                 ]}
-                onPress={() => handleFollowerButtonClick(post.userId)}>
+                onPress={() => handleFollowerButtonClick(post.userId)}
+              >
                 <Text style={styles.followerButtonText}>
                   {followingList.includes(post.userId) ? "Following" : "Follow"}
                 </Text>
               </TouchableOpacity>
             </View>
-            <Swiper containerStyle={styles.swiperContainer} activeDotColor="white" showsButtons={false} dotColor="silver" autoplay={true}>
-              {Array.isArray(post.media) && post.media.map((selectedMedia, index) => (
-                <View key={index}>
-                  {selectedMedia.type === "image" && (
-                    <Image source={{ uri: selectedMedia.url }} style={styles.postImage} />
-                  )}
-                  {selectedMedia.type === "video" && (
-                    <View>
-                      <Video
-                        ref={videoRef}
+            <Swiper
+              containerStyle={styles.swiperContainer}
+              activeDotColor="white"
+              showsButtons={false}
+              dotColor="silver"
+              autoplay={true}
+            >
+              {Array.isArray(post.media) &&
+                post.media.map((selectedMedia, index) => (
+                  <View key={index}>
+                    {selectedMedia.type === "image" && (
+                      <Image
                         source={{ uri: selectedMedia.url }}
                         style={styles.postImage}
-                        resizeMode="cover"
-                        shouldPlay={false}
-                        isLooping
-                        onPlaybackStatusUpdate={(status) => {
-                          setVideoDuration(status.durationMillis);
-                          setCurrentPosition(status.positionMillis);
-                        }}
                       />
-                      <TouchableOpacity style={styles.playButton} onPress={toggleVideoPlayback}>
-                        <MaterialIcons name={isVideoPlaying ? "pause" : "play-arrow"} size={40} color="white" />
-                      </TouchableOpacity>
-                      <View style={styles.videoControls}>
-                        <TouchableOpacity onPress={() => handleSeek(-10)}>
-                          <MaterialIcons name="replay-10" size={30} color="white" />
-                        </TouchableOpacity>
-                        <Text style={styles.videoDuration}>{formatDuration(currentPosition)}</Text>
-                        <Slider
-                          style={styles.slider}
-                          minimumValue={0}
-                          maximumValue={1}
-                          value={currentPosition / videoDuration}
-                          onValueChange={handleSliderChange}
+                    )}
+                    {selectedMedia.type === "video" && (
+                      <View>
+                        <Video
+                          isLooping
+                          ref={videoRef}
+                          shouldPlay={false}
+                          resizeMode="cover"
+                          style={styles.postImage}
+                          source={{ uri: selectedMedia.url }}
+                          onPlaybackStatusUpdate={(status) => {
+                            setVideoDuration(status.durationMillis);
+                            setCurrentPosition(status.positionMillis);
+                          }}
                         />
-                        <Text style={styles.videoDuration}>{formatDuration(videoDuration)}</Text>
-                        <TouchableOpacity onPress={() => handleSeek(10)}>
-                          <MaterialIcons name="forward-10" size={30} color="white" />
+                        <TouchableOpacity
+                          style={styles.playButton}
+                          onPress={toggleVideoPlayback}
+                        >
+                          <MaterialIcons
+                            name={isVideoPlaying ? "pause" : "play-arrow"}
+                            color="white"
+                            size={40}
+                          />
                         </TouchableOpacity>
+                        <View style={styles.videoControls}>
+                          <TouchableOpacity onPress={() => handleSeek(-10)}>
+                            <MaterialIcons
+                              name="replay-10"
+                              color="white"
+                              size={30}
+                            />
+                          </TouchableOpacity>
+                          <Text style={styles.videoDuration}>
+                            {formatDuration(currentPosition)}
+                          </Text>
+                          <Slider
+                            minimumValue={0}
+                            maximumValue={1}
+                            style={styles.slider}
+                            onValueChange={handleSliderChange}
+                            value={currentPosition / videoDuration}
+                          />
+                          <Text style={styles.videoDuration}>
+                            {formatDuration(videoDuration)}
+                          </Text>
+                          <TouchableOpacity onPress={() => handleSeek(10)}>
+                            <MaterialIcons
+                              name="forward-10"
+                              size={30}
+                              color="white"
+                            />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                    </View>
-                  )}
-                </View>
-              ))}
+                    )}
+                  </View>
+                ))}
             </Swiper>
             <View style={styles.likesContainer}>
-             <TouchableOpacity style={styles.likeButton} onPress={() => handleLikeButtonClick(post.id)}>
-               <FontAwesome name={post.likes && post.likes.includes(user?.uid) ? "heart" : "heart-o"} size={22} color={post.likes && post.likes.includes(user?.uid) ? "red" : "black"} />
-             </TouchableOpacity>
-             <Text style={styles.likeCount}>{post.likes ? `${post.likes.length} Likes` : '0 Likes'}</Text>
+              <TouchableOpacity
+                style={styles.likeButton}
+                onPress={() => handleLikeButtonClick(post.id)}
+              >
+                <FontAwesome
+                  name={
+                    post.likes && post.likes.includes(user?.uid)
+                      ? "heart"
+                      : "heart-o"
+                  }
+                  size={22}
+                  color={
+                    post.likes && post.likes.includes(user?.uid)
+                      ? "red"
+                      : "black"
+                  }
+                />
+              </TouchableOpacity>
+              <Text style={styles.likeCount}>
+                {post.likes ? `${post.likes.length} Likes` : "0 Likes"}
+              </Text>
             </View>
             <Text style={styles.postTitle}>{post.title}</Text>
           </View>
         ))}
       </ScrollView>
       <View style={styles.addButtonContainer}>
-        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("AddPostScreen")}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("AddPostScreen")}
+        >
           <FontAwesome name="plus" size={20} color="white" />
         </TouchableOpacity>
       </View>
@@ -311,7 +427,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginBottom: 20,
     alignItems: "center",
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     flexDirection: "row",
     paddingHorizontal: 25,
     backgroundColor: "white",
@@ -329,7 +445,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 20,
-    fontFamily: 'Poppins-Medium',
+    fontFamily: "Poppins-Medium",
   },
   scrollView: {
     width: "100%",
@@ -375,7 +491,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: "600",
-    fontFamily: 'Outfit-Regular',
+    fontFamily: "Outfit-Regular",
   },
   postTime: {
     fontSize: 14,
@@ -399,7 +515,7 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: "600",
-    fontFamily: 'Outfit-Regular',
+    fontFamily: "Outfit-Regular",
   },
   postTime: {
     fontSize: 14,
@@ -446,16 +562,16 @@ const styles = StyleSheet.create({
   },
   followerButtonText: {
     color: "white",
-    fontFamily: 'Poppins-Regular'
+    fontFamily: "Poppins-Regular",
   },
   postTitle: {
     fontSize: 16,
     marginLeft: 10,
     fontFamily: "Poppins-Regular",
   },
-  likesContainer:{
-    display: 'flex',
-    flexDirection: 'row',
+  likesContainer: {
+    display: "flex",
+    flexDirection: "row",
     marginBottom: 10,
   },
   likeButton: {
@@ -464,7 +580,7 @@ const styles = StyleSheet.create({
   likeCount: {
     marginLeft: 10,
     color: "black",
-    fontFamily: 'Poppins-Regular'
+    fontFamily: "Poppins-Regular",
   },
   playButton: {
     position: "absolute",
@@ -478,9 +594,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    position: 'absolute',
+    position: "absolute",
     bottom: 20,
-    width: '95%',
+    width: "95%",
     right: 10,
   },
   videoDuration: {
