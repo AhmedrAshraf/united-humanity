@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import * as Device from "expo-device";
 import logo from "../assets/logo.png";
-import { auth, database } from "../firebase";
+import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { UserContext } from "../utils/UserContext";
 import * as Notifications from "expo-notifications";
@@ -77,42 +77,42 @@ const CreateAdminScreen = ({ navigation }) => {
   const handleSubmit = async () => {
     if (!email || !name || !password) {
       alert("Please fill all the fields");
-    } else {
-      setLoading(true);
-      const username = email.split("@")[0] + Math.floor(Math.random() * 1000);
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(async (userInfo) => {
-          if (userInfo?.user?.uid) {
-            let usr = {
-              name,
-              email,
-              username,
-              profilePic: "",
-              createdAt: Date.now(),
-              uid: userInfo.user.uid,
-              token: pushToken || "",
-            };
-            setUser(usr);
-            setUid(userInfo.user.uid);
-            await AsyncStorage.setItem("user", JSON.stringify(usr));
-            await AsyncStorage.setItem("uid", userInfo.user.uid);
-            await setDoc(doc(database, "users", userInfo.user.uid), usr);
-            setName("");
-            setEmail("");
-            setPassword("");
-            setLoading(false);
-            navigation.navigate("ProfileDetailScreen");
-            console.log("Admin Successfully Registered!");
-          } else {
-            setLoading(false);
-            alert("User not created");
-          }
-        })
-        .catch((er) => {
-          setLoading(false);
-          alert(JSON.stringify(er));
-        });
+      return;
     }
+
+    setLoading(true);
+    const username = email.split("@")[0] + Math.floor(Math.random() * 1000);
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(async (userInfo) => {
+        if (userInfo?.user?.uid) {
+          let usr = {
+            name,
+            email,
+            username,
+            profilePic: "",
+            createdAt: Date.now(),
+            uid: userInfo.user.uid,
+            token: pushToken || "",
+          };
+          setUser(usr);
+          setUid(userInfo.user.uid);
+          await AsyncStorage.setItem("user", JSON.stringify(usr));
+          await AsyncStorage.setItem("uid", userInfo.user.uid);
+          await setDoc(doc(db, "users", userInfo.user.uid), usr);
+          setName("");
+          setEmail("");
+          setPassword("");
+          setLoading(false);
+          console.log("Admin Successfully Registered!");
+        } else {
+          setLoading(false);
+          alert("User not created");
+        }
+      })
+      .catch((er) => {
+        setLoading(false);
+        alert(JSON.stringify(er));
+      });
   };
 
   return (

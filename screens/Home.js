@@ -13,11 +13,7 @@ import {
 } from "react-native";
 import {
   doc,
-  where,
-  query,
   getDoc,
-  orderBy,
-  getDocs,
   updateDoc,
   collection,
   arrayUnion,
@@ -25,32 +21,26 @@ import {
 } from "firebase/firestore";
 import moment from "moment";
 import { Video } from "expo-av";
-import { database } from "../firebase";
+import { db } from "../firebase";
 import Swiper from "react-native-swiper";
 import { UserContext } from "../utils/UserContext";
 import Slider from "@react-native-community/slider";
+import React, { useContext, useState, useRef } from "react";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import React, { useContext, useEffect, useState, useRef } from "react";
 
 const Home = ({ navigation }) => {
-  const { user } = useContext(UserContext);
+  const { user, followingList, setFollowingList, posts, loading } =
+    useContext(UserContext);
 
   const videoRef = useRef(null);
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [likedPosts, setLikedPosts] = useState([]);
   const [videoDuration, setVideoDuration] = useState(0);
-  const [followingList, setFollowingList] = useState([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const uri =
     user?.profilePic ||
     "https://freepngimg.com/thumb/google/66726-customer-account-google-service-button-search-logo.png";
-
-  useEffect(() => {
-    fetchPosts();
-  }, [followingList.length, likedPosts]);
 
   const handleLikeButtonClick = async (postId) => {
     try {
@@ -64,7 +54,7 @@ const Home = ({ navigation }) => {
   };
 
   const updateLikes = async (postId, updateType) => {
-    await updateDoc(doc(database, "posts", postId), { likes: updateType });
+    await updateDoc(doc(db, "posts", postId), { likes: updateType });
     setLikedPosts((prevLikedPosts) =>
       updateType === arrayRemove(user?.uid)
         ? prevLikedPosts.filter((id) => id !== postId)
@@ -72,88 +62,10 @@ const Home = ({ navigation }) => {
     );
   };
 
-  const fetchPosts = async (pageSize = 5) => {
-    try {
-      setLoading(true);
-
-      // Fetch user's following list
-      if (!followingList.length && user?.uid) {
-        const userDocumentRef = doc(collection(database, "users"), user.uid);
-        const userDocument = await getDoc(userDocumentRef);
-        const updatedFollowingList = (
-          userDocument.data()?.followingList || []
-        ).map(String);
-        setFollowingList(updatedFollowingList);
-      }
-
-      // Query for posts
-      const allPostsQuery = query(
-        collection(database, "posts"),
-        orderBy("createdAt", "desc")
-      );
-      const followingPostsQuery =
-        followingList.length > 0
-          ? query(
-              collection(database, "posts"),
-              where("userId", "in", followingList),
-              orderBy("createdAt", "desc")
-            )
-          : null;
-
-      const queryToUse = followingPostsQuery || allPostsQuery;
-
-      // Fetch posts data with pagination
-      const postsSnapshot = await getDocs(queryToUse);
-      const postsData = postsSnapshot.docs.map((postDoc) =>
-        processPost(postDoc)
-      );
-      const limitedPostsData = postsData.slice(0, pageSize);
-
-      // Separate all posts and following posts
-      const allPostsSnapshot = await getDocs(allPostsQuery);
-      const allPosts = await Promise.all(
-        allPostsSnapshot.docs.map((doc) => processPost(doc))
-      );
-
-      const followingPostsSnapshot = followingPostsQuery
-        ? await getDocs(followingPostsQuery)
-        : null;
-      const followingPosts = followingPostsSnapshot
-        ? await Promise.all(
-            followingPostsSnapshot.docs.map((doc) => processPost(doc))
-          )
-        : [];
-
-      // Combine and sort posts
-      const combinedPosts = followingPosts
-        .concat(allPosts)
-        .filter((post) => post.userId !== user?.uid);
-
-      // Sort posts based on dynamic priority
-      const sortedPosts = combinedPosts.sort((postA, postB) => {
-        const isUserAFollowed = followingList.includes(postA.userId);
-        const isUserBFollowed = followingList.includes(postB.userId);
-
-        if (isUserAFollowed === isUserBFollowed) {
-          return 0;
-        }
-
-        return isUserAFollowed ? -1 : 1;
-      });
-
-      // Set sorted posts and update loading state
-      setPosts(sortedPosts);
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
-      console.error("Error fetching data:", error);
-    }
-  };
-
   const handleFollowerButtonClick = async (postUserId) => {
     try {
-      const userDocRef = doc(collection(database, "users"), user?.uid);
-      const targetUserDocRef = doc(collection(database, "users"), postUserId);
+      const userDocRef = doc(collection(db, "users"), user?.uid);
+      const targetUserDocRef = doc(collection(db, "users"), postUserId);
       const userDoc = await getDoc(userDocRef);
       const currentUserData = userDoc.data();
       const stringPostUserId = postUserId.toString();
@@ -180,7 +92,7 @@ const Home = ({ navigation }) => {
   const processPost = async (doc) => {
     try {
       const postData = doc.data();
-      const userData = await getDoc(doc(database, "users", postData.userId));
+      const userData = await getDoc(doc(db, "users", postData.userId));
 
       return {
         ...postData,

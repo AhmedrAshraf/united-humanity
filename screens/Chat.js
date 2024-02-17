@@ -11,17 +11,16 @@ import {
   TouchableOpacity,
 } from "react-native";
 import moment from "moment";
-import { database } from "../firebase";
+import { db } from "../firebase";
 import { UserContext } from "../utils/UserContext";
 import { Image as OptimizedImage } from "expo-image";
 import Icon from "@expo/vector-icons/MaterialCommunityIcons";
 import React, { useContext, useEffect, useState } from "react";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { query, where, collection, onSnapshot } from "firebase/firestore";
 
 const ChatScreen = ({ navigation }) => {
-  const { user, uid, setUid } = useContext(UserContext);
+  const { user, uid } = useContext(UserContext);
 
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,7 +38,7 @@ const ChatScreen = ({ navigation }) => {
   console.log(users)
   const getActiveChats = () => {
     const q = query(
-      collection(database, "users"),
+      collection(db, "users"),
       where(`${uid}user`, "==", true)
     );
     const unsubscribe = onSnapshot(q, (snap) => {
@@ -247,30 +246,25 @@ const styles = StyleSheet.create({
     color: "gray",
     marginBottom: 5,
   },
-
   searchContainer: {
-    width: "92%",
-    alignSelf: "center",
-    position: "relative",
     alignItems: "center",
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20
+    justifyContent: "center",
   },
   searchInput: {
     margin: 3,
     height: 40,
-    width: "100%",
-    elevation: 4,
-    shadowRadius: 3,
+    width: "90%",
+    elevation: 2,
+    shadowRadius: 2,
+    borderRadius: 4,
     shadowOpacity: 1,
-    borderRadius: 100,
     position: "relative",
     alignItems: "center",
     paddingHorizontal: 20,
     backgroundColor: "white",
-    shadowColor: "rgba(0,0,0,0.2)",
-    shadowOffset: { width: 0, height: 0 },
+    shadowColor: "rgba(0,0,0,0.3)",
+    shadowOffset: { width: 0, height: 1 },
     fontFamily: 'Poppins-Regular'
   },
   searchIcon: {

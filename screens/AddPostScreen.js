@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Video } from 'expo-av';
-import { database, storage } from "../firebase";
+import { db, storage } from "../firebase";
 import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons } from "@expo/vector-icons";
 import { UserContext } from "../utils/UserContext";
@@ -122,7 +122,7 @@ const AddPostScreen = ({ navigation }) => {
     }
   
     try {
-      const postCollection = collection(database, "posts");
+      const postCollection = collection(db, "posts");
       const post = {
         title,
         creatorName: user.name || null,

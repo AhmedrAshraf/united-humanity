@@ -3,7 +3,7 @@ import { FontAwesome, Feather, Entypo, MaterialIcons } from "@expo/vector-icons"
 import { Text, View, Image, StyleSheet, ScrollView, SafeAreaView, RefreshControl, TouchableOpacity } from "react-native";
 import { doc, getDoc, query, collection, arrayUnion, onSnapshot, arrayRemove, updateDoc, orderBy, where } from "firebase/firestore";
 import { Button } from "react-native-paper";
-import { database } from "../firebase";
+import { db } from "../firebase";
 import moment from "moment";
 import { Video } from 'expo-av';
 import Swiper from "react-native-swiper";
@@ -32,7 +32,7 @@ const Profile = ({ navigation }) => {
 
   const getUser = async () => {
     try {
-      const docData = await getDoc(doc(database, "users", uid));
+      const docData = await getDoc(doc(db, "users", uid));
       const userData = docData.data();
       setUser(userData);
 
@@ -49,7 +49,7 @@ const Profile = ({ navigation }) => {
 
   const getPosts = () => {
     const q = query(
-      collection(database, "posts"),
+      collection(db, "posts"),
       where("userId", "==", uid),
       orderBy("createdAt", "desc")
     );
@@ -84,7 +84,7 @@ const Profile = ({ navigation }) => {
       const postIndex = likedPosts.indexOf(postId);
       const updateType = postIndex !== -1 ? arrayRemove(user?.uid) : arrayUnion(user?.uid);
 
-      await updateDoc(doc(database, "posts", postId), { likes: updateType });
+      await updateDoc(doc(db, "posts", postId), { likes: updateType });
       setLikedPosts((prevLikedPosts) => (updateType === arrayRemove(user?.uid) ? prevLikedPosts.filter((id) => id !== postId) : [...prevLikedPosts, postId]));
     } catch (error) {
       console.error("Error updating likes:", error);

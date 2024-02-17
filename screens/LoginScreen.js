@@ -14,7 +14,7 @@ import {
 import * as Device from "expo-device";
 import logo from "../assets/logo.png";
 import { StatusBar } from "expo-status-bar";
-import { auth, database } from "../firebase";
+import { auth, db } from "../firebase";
 import { UserContext } from "../utils/UserContext";
 import * as Notifications from "expo-notifications";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -78,29 +78,27 @@ const LoginScreen = ({ navigation }) => {
   }
 
   const handleLogin = () => {
-    if (email && psw) {
-      setLoading(true);
-      signInWithEmailAndPassword(auth, email, psw)
-        .then(async (user) => {
-          setUid(user?.user?.uid);
-          setUser(user?.user?.uid);
-          let usr = await getDoc(doc(database, "users", user?.user?.uid));
-          await AsyncStorage.setItem("uid", user?.user?.uid);
-          if (pushToken) {
-            updateDoc(doc(auth, "users", user.user?.uid), { token: pushToken });
-          }
-          let usrr = JSON.stringify({ ...usr, token: pushToken });
-          setUser(usrr);
-          await AsyncStorage.setItem("user", usrr);
-        })
-        .catch((err) => {
-          alert(err.message);
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
+    if (!email && !psw) {
       alert("Invalid Email & Password");
+      return;
     }
+    setLoading(true);
+    signInWithEmailAndPassword(auth, email, psw)
+      .then(async (user) => {
+        let usr = await getDoc(doc(db, "users", user?.user?.uid));
+        if (pushToken) {
+          updateDoc(doc(auth, "users", user.user?.uid), { token: pushToken });
+        }
+        let usrr = JSON.stringify({ ...usr.data(), token: pushToken });
+        await AsyncStorage.setItem("uid", user?.user?.uid);
+        await AsyncStorage.setItem("user", usrr);
+        setUser({ ...usr.data(), token: pushToken });
+        setUid(user?.user?.uid);
+      })
+      .catch((err) => {
+        alert(err.message);
+        setLoading(false);
+      });
   };
 
   return (

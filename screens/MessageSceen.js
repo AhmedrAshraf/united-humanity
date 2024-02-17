@@ -17,7 +17,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
-import { database } from "../firebase";
+import { db } from "../firebase";
 import Lottie from "lottie-react-native";
 import React, { useState, useCallback } from "react";
 import { ActivityIndicator } from "react-native-paper";
@@ -39,7 +39,7 @@ const Chat = ({ route, navigation }) => {
       getBadWords();
       setMessages([]);
       const q = query(
-        collection(database, "chat"),
+        collection(db, "chat"),
         where(user?.uid, "==", true),
         where(uid, "==", true)
       );
@@ -58,12 +58,12 @@ const Chat = ({ route, navigation }) => {
   );
 
   const readMsg = () => {
-    updateDoc(doc(database, "users", user?.uid), { [uid]: { unread: false } });
+    updateDoc(doc(db, "users", user?.uid), { [uid]: { unread: false } });
   };
 
   const getBadWords = () => {
     let id = "mCTYDtmuDJhUDICTC93b";
-    getDoc(doc(database, "restrictedWords", id)).then((item) => {
+    getDoc(doc(db, "restrictedWords", id)).then((item) => {
       if (item?.data()?.words?.length) {
         setWordLists(item.data().words);
       }
@@ -99,9 +99,9 @@ const Chat = ({ route, navigation }) => {
         [`${user?.uid}user`]: true,
         [user?.uid]: { unread: true, startedChat: true, msgTime: Date.now() },
       };
-      updateDoc(doc(database, "users", user?.uid), usr);
-      updateDoc(doc(database, "users", uid), currUser);
-      addDoc(collection(database, "chat"), chatObj);
+      updateDoc(doc(db, "users", user?.uid), usr);
+      updateDoc(doc(db, "users", uid), currUser);
+      addDoc(collection(db, "chat"), chatObj);
       fetch("https://exp.host/--/api/v2/push/send", {
         method: "POST",
         headers: {

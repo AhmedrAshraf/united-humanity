@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Button } from "react-native-paper";
-import { database, storage } from "../firebase";
+import { db, storage } from "../firebase";
 import * as ImagePicker from "expo-image-picker";
 import { UserContext } from "../utils/UserContext";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
@@ -32,7 +32,7 @@ const ProfileDetailScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const userDocRef = doc(database, "users", uid);
+        const userDocRef = doc(db, "users", uid);
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
@@ -117,7 +117,7 @@ const ProfileDetailScreen = ({ navigation }) => {
     try {
       setLoading(true);
 
-      const userDocRef = doc(database, "users", user.uid);
+      const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
         username: user.username,
         profilePic: image,

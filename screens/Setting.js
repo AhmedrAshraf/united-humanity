@@ -19,7 +19,7 @@ import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { UserContext } from "../utils/UserContext";
-import { database, storage } from "../firebase";
+import { db, storage } from "../firebase";
 import * as ImagePicker from "expo-image-picker";
 
 const SettingScreen = ({ navigation }) => {
@@ -35,7 +35,7 @@ const SettingScreen = ({ navigation }) => {
 
   const getUser = async () => {
     try {
-      const userDoc = await getDoc(doc(database, "users", uid));
+      const userDoc = await getDoc(doc(db, "users", uid));
       setUser(userDoc.data());
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -102,7 +102,7 @@ const SettingScreen = ({ navigation }) => {
   const saveChanges = async () => {
     try {
       setLoading(true);
-      const userDocRef = doc(database, "users", user.uid);
+      const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, {
         username: user.username,
         profilePic: image,
